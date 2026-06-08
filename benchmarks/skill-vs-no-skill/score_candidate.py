@@ -98,7 +98,8 @@ def edge_keyword_hits(candidate: Path, task: dict) -> list[str]:
 
 
 def score_process(candidate: Path, task: dict) -> dict:
-    has_report = (candidate / "AI_TDD_REPORT.md").exists()
+    report_paths = [path for path in [candidate / "EDD_REPORT.md", candidate / "AI_TDD_REPORT.md"] if path.exists()]
+    has_report = bool(report_paths)
     evals_dir = candidate / "evals"
     has_red = (evals_dir / "red.log").exists()
     has_green = (evals_dir / "green.log").exists()
@@ -118,6 +119,7 @@ def score_process(candidate: Path, task: dict) -> dict:
         "score": score,
         "max_score": 35,
         "has_report": has_report,
+        "report_path": str(report_paths[0].relative_to(candidate)) if report_paths else None,
         "has_evals_dir": evals_dir.exists(),
         "has_red_log": has_red,
         "has_green_log": has_green,

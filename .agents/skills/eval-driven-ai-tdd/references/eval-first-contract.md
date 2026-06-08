@@ -1,6 +1,6 @@
 # Eval-First Contract
 
-Use this contract when turning a coding request into an eval-driven loop.
+Use this contract before implementation. In EDD, the evaluation contract is the project's first engineering artifact, not a QA step after code exists.
 
 ## Contract Shape
 
@@ -12,6 +12,7 @@ Define these before implementation:
 - Invariants: Properties that should always hold.
 - Regressions: Past or likely failures that must not return.
 - Verification command: The smallest command that proves the behavior.
+- Hidden scoring layer: What the agent must not see during implementation.
 
 ## Good Eval Cases
 
@@ -27,12 +28,14 @@ Avoid cases that only mirror the implementation. Tests should encode the contrac
 
 Put new regression coverage in a clearly named file such as `tests/test_regressions.py` unless the project already has a better convention. This makes it easier to separate agent-added coverage from starter or legacy tests.
 
+Hidden benchmark failures should not stay hidden forever. After scoring, convert each useful hidden failure into an agent-visible regression before the next loop.
+
 ## Report Template
 
-Use this structure for `AI_TDD_REPORT.md`:
+Use this structure for `EDD_REPORT.md`:
 
 ```md
-# AI TDD Report
+# EDD Report
 
 ## Contract
 - ...

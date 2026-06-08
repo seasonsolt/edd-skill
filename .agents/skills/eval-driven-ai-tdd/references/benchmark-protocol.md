@@ -8,6 +8,7 @@ Use this when comparing skills, prompts, agents, models, or workflows.
 - Use paired runs: each baseline task copy must have a matching with-skill copy from the same starter state.
 - Keep hidden tests, scorer code, expected answers, and prior results out of agent-visible task directories.
 - Score functional quality and process quality separately.
+- Keep the agent loop and the benchmark scorer separate. The agent can run public tests and visible evals; the scorer runs hidden tests after the run.
 - Record model, date, prompt, task version, score version, and command outputs.
 - Treat one pair as a smoke test. Prefer 5 or more pairs per task family before making a strong claim.
 
@@ -25,6 +26,7 @@ Use this when comparing skills, prompts, agents, models, or workflows.
 - Use identical time budgets and model settings.
 - Randomize task order when running many trials.
 - Preserve raw artifacts so later reviewers can audit the score.
+- When hidden tests find a useful miss, turn it into a visible regression only after that run has been scored.
 
 ## Reporting
 

@@ -39,6 +39,14 @@ def report_sections(report: Path) -> list[str]:
     return sections
 
 
+def find_report(root: Path) -> Path | None:
+    for name in ("EDD_REPORT.md", "AI_TDD_REPORT.md"):
+        path = root / name
+        if path.exists():
+            return path
+    return None
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--project-root", default=".", help="Project root to inspect")
@@ -48,7 +56,7 @@ def main() -> int:
 
     root = Path(args.project_root).resolve()
     evals_dir = root / "evals"
-    report = root / "AI_TDD_REPORT.md"
+    report = find_report(root)
 
     eval_files = []
     if evals_dir.exists():
@@ -70,8 +78,9 @@ def main() -> int:
     ]
     checks = {
         "project_root": str(root),
-        "has_report": report.exists(),
-        "report_sections": report_sections(report),
+        "has_report": report is not None,
+        "report_path": str(report.relative_to(root)) if report else None,
+        "report_sections": report_sections(report) if report else [],
         "has_evals_dir": evals_dir.exists(),
         "has_red_log": (evals_dir / "red.log").exists(),
         "has_green_log": (evals_dir / "green.log").exists(),
