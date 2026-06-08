@@ -1,4 +1,4 @@
 interface:
-  display_name: "Eval-Driven AI TDD"
-  short_description: "Force AI coding through eval-first TDD loops"
+  display_name: "EDD Skill"
+  short_description: "Eval-first TDD loops for AI coding agents"
   default_prompt: "Use $eval-driven-ai-tdd to solve this coding task by writing the benchmark or regression tests before implementation."

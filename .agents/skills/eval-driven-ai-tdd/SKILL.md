@@ -3,9 +3,9 @@ name: eval-driven-ai-tdd
 description: "Use for AI coding tasks where correctness depends on tests, evals, benchmarks, hidden edge cases, regression protection, or comparing agent performance. Forces a red-green-refactor loop: define behavioral success criteria, add failing tests or eval cases before implementation, run them, implement narrowly, rerun, and record evidence."
 ---
 
-# Eval-Driven AI TDD
+# EDD Skill
 
-Use this skill to make coding work measurable before implementation. The goal is not to create extra process; it is to give the agent a clear gradient.
+EDD means Eval-Driven Development. Use this skill to make coding work measurable before implementation. The goal is not to create extra process; it is to give the agent a clear gradient.
 
 ## Workflow
 
