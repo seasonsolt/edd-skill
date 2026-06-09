@@ -32,22 +32,22 @@ The key point is narrower and stronger:
 - The repo now has a real Codex skill, not just prose.
 - The benchmark has three task families and hidden tests.
 - `verify_benchmark.py` proves starter tasks fail and reference implementations pass.
-- The 5-trial paired run showed a stable process-score lift: median total delta +33.5, mean total delta +31.5.
-- Both conditions passed all hidden tests in the 5-trial run, which keeps the claim honest: the current evidence supports auditability and reproducibility, not functional correctness uplift.
-- `tool-call-planner` adds a harder AI-app-like task surface with policy precedence, risk choice, approval, missing arguments, and prompt-injection resistance.
+- The latest 5-trial paired run across all three task families showed a stable process-score lift: median total delta +29.66, mean total delta +28.6.
+- `tool-call-planner` added a harder AI-app-like task surface with policy precedence, risk choice, approval, missing arguments, and prompt-injection resistance.
+- The harder task exposed hidden functional misses in both conditions: baseline and with-skill each passed 10 / 15 hidden task runs.
 
 ## Weak Spots
 
 - The internal skill name is still `$eval-driven-ai-tdd`; this is compatible but less aligned with the product name `EDD Skill`.
 - The benchmark measures process artifacts well, but it does not yet track cost, elapsed time, token use, or tool-call count.
-- The hidden-failure-to-regression workflow is described but not automated.
+- The hidden-failure-to-regression workflow is described but not automated, and `tool-call-planner` now gives concrete failures to feed into it.
 - The artifact checker still keeps backward compatibility with `AI_TDD_REPORT.md`; new runs should prefer `EDD_REPORT.md`.
-- The two task families in the completed 5-trial run were easy enough that baseline agents also passed hidden tests; this makes the existing result good for process evidence, but weak for proving functional uplift.
+- The skill has not yet improved hidden functional correctness; its demonstrated value remains process evidence, auditability, and reproducibility.
 
 ## Next Improvements
 
-1. Run 5 paired trials across all three task families and compare hidden-pass-rate delta.
-2. Add cost/time metadata to each run's score JSON.
-3. Add a script that converts selected hidden failures into visible regression templates after scoring.
-4. Consider adding an alias skill or renamed skill folder for `$edd-skill` once compatibility is less important.
-5. Add a result card or README figure that separates functional correctness, process evidence, and claim strength.
+1. Create `tool-call-planner` v2 by converting scored hidden misses into visible regressions without leaking the original hidden tests.
+2. Rerun 5 paired trials on the v2 task and compare hidden-pass-rate delta.
+3. Add cost/time metadata to each run's score JSON.
+4. Add a script that converts selected hidden failures into visible regression templates after scoring.
+5. Consider adding an alias skill or renamed skill folder for `$edd-skill` once compatibility is less important.

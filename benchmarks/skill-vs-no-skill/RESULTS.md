@@ -2,7 +2,46 @@
 
 Record each A/B run here after scoring.
 
-## Five-Trial Paired Experiment
+## Five-Trial Paired Experiment: Three-Task Suite
+
+- Date: 2026-06-10
+- Model: inherited current Codex model for all worker agents
+- Task families: `quote-engine`, `feature-flags`, `tool-call-planner`
+- Trials: 5 paired trials, 15 baseline task runs, 15 with-skill task runs
+- Command: `python3 benchmarks/skill-vs-no-skill/score_trials.py --trials-root runs/skill-vs-no-skill-trials-3task --expected-trial-count 5`
+
+### Aggregate Scores
+
+| Metric | Baseline | With EDD Skill | Delta |
+| --- | ---: | ---: | ---: |
+| Mean total score | 53.8 | 82.4 | +28.6 |
+| Median total score | 52.67 | 82.33 | +29.66 |
+| Worst trial mean score | 52.67 | 81.67 | +29.0 by condition |
+| Mean functional delta | - | - | 0 |
+| Median functional delta | - | - | 0 |
+| Mean process delta | - | - | +28.6 |
+| Median process delta | - | - | +29.67 |
+| Hidden pass rate | 10 / 15 | 10 / 15 | 0 |
+| `tool-call-planner` hidden pass rate | 0 / 5 | 0 / 5 | 0 |
+
+### Trial Deltas
+
+| Trial | Baseline mean | With-skill mean | Score delta | Process delta | Functional delta | Hidden pass |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| trial-001 | 52.67 | 82.67 | +30.0 | +30.0 | 0 | both 66.67% |
+| trial-002 | 58.33 | 82.33 | +24.0 | +24.0 | 0 | both 66.67% |
+| trial-003 | 52.67 | 81.67 | +29.0 | +29.0 | 0 | both 66.67% |
+| trial-004 | 52.67 | 82.33 | +29.66 | +29.67 | 0 | both 66.67% |
+| trial-005 | 52.67 | 83.0 | +30.33 | +30.33 | 0 | both 66.67% |
+
+### Interpretation
+
+- The with-skill condition still shows a stable process/auditability lift: median total delta +29.66.
+- The functional delta remains 0. Baseline and with-skill both passed every `quote-engine` and `feature-flags` hidden run, and both failed every `tool-call-planner` hidden run.
+- `tool-call-planner` did its job as a harder benchmark: it exposed planning/policy misses that public tests did not catch.
+- EDD Skill did not, by itself, make agents infer those hidden planning boundaries. The next loop should convert scored hidden misses into visible regressions or a v2 task, then rerun paired trials.
+
+## Five-Trial Paired Experiment: Two-Task Suite
 
 - Date: 2026-06-09
 - Model: inherited current Codex model for all worker agents
@@ -67,7 +106,7 @@ Record each A/B run here after scoring.
 
 ## Benchmark Integrity
 
-- Date: 2026-06-09
+- Date: 2026-06-10
 - Task families: `quote-engine`, `feature-flags`, `tool-call-planner`
 - Command: `python3 benchmarks/skill-vs-no-skill/verify_benchmark.py`
 - Result: passed
@@ -76,7 +115,7 @@ Record each A/B run here after scoring.
 
 ## Credibility Status
 
-- Current evidence: 5 paired trials across `quote-engine` and `feature-flags`.
+- Current evidence: 5 paired trials across `quote-engine`, `feature-flags`, and `tool-call-planner`.
 - Benchmark coverage: three task families with public tests, hidden tests, reference implementations, and an integrity check.
 - Claim strength: credible for process/auditability improvement, not credible yet for functional correctness uplift.
-- Next threshold: run 5 paired trials across all three task families and report whether hidden-pass-rate delta changes.
+- Next threshold: convert scored `tool-call-planner` hidden misses into visible regressions or a v2 task, then rerun paired trials.

@@ -25,21 +25,22 @@ EDD Skill 约束的是这几件事：
 
 ## 已经测到的提升
 
-当前最可信的一轮实验是 5 个 paired trials，覆盖两个 task family：`quote-engine` 和 `feature-flags`。每个 trial 都有 baseline 与 with-skill 两个条件，hidden tests 和 scorer 都不暴露给 agent。
+当前最可信的一轮实验是 5 个 paired trials，覆盖三个 task family：`quote-engine`、`feature-flags`、`tool-call-planner`。每个 trial 都有 baseline 与 with-skill 两个条件，hidden tests 和 scorer 都不暴露给 agent。
 
 | 指标 | baseline | with EDD Skill | delta |
 | --- | ---: | ---: | ---: |
-| median total score | 65.0 / 100 | 99.5 / 100 | +33.5 |
-| mean total score | 68.0 / 100 | 99.5 / 100 | +31.5 |
-| functional score | 65 / 65 | 65 / 65 | 0 |
-| process score range | 0-15 / 35 | 32-35 / 35 | +33.5 median |
-| hidden pass rate | 10 / 10 | 10 / 10 | 0 |
+| median total score | 52.67 / 100 | 82.33 / 100 | +29.66 |
+| mean total score | 53.8 / 100 | 82.4 / 100 | +28.6 |
+| median functional delta | - | - | 0 |
+| median process delta | - | - | +29.67 |
+| hidden pass rate | 10 / 15 | 10 / 15 | 0 |
+| `tool-call-planner` hidden pass rate | 0 / 5 | 0 / 5 | 0 |
 
-客观结论很克制：EDD Skill 在这组任务上没有提升 hidden functional correctness，因为 baseline agent 也全部通过了 hidden tests。它稳定提升的是 agent coding loop 的可审计性：with-skill runs 持续留下 eval contract、red/green evidence、regression tests 和 `EDD_REPORT.md`。
+客观结论更克制：EDD Skill 在这组任务上仍没有提升 hidden functional correctness。新增的 `tool-call-planner` 成功暴露了隐藏规划边界，但 baseline 和 with-skill 都没过这一类 hidden tests。它稳定提升的是 agent coding loop 的可审计性：with-skill runs 持续留下 eval contract、red/green evidence、regression tests 和 `EDD_REPORT.md`。
 
-这已经能证明一个实际价值：当功能都能做对时，EDD Skill 让 agent coding loop 更可复现、更容易复盘，也更适合把失败回流成 regression。
+这已经能证明一个实际价值：EDD Skill 让 agent coding loop 更可复现、更容易复盘，也更适合把失败回流成 regression。但它不是功能正确性的自动保证。
 
-还不能证明的是：它稳定提高所有任务的功能正确性。为补这个证据缺口，repo 已新增更接近 AI app 的 `tool-call-planner` task family；它还没有进入上面这组 5-trial 结果。
+下一步应该把 `tool-call-planner` 的已评分 hidden miss 回流成 agent-visible regression 或 task v2，再验证 skill 是否能把这类规划边界纳入 coding loop。
 
 ## Repo 里有什么
 
@@ -155,9 +156,9 @@ EDD Skill 的价值在于把流程固定下来：
 这个 repo 还在早期。
 
 - 已完成：一个 Codex skill、三个 task family、hidden tests、suite scorer、trial scorer、benchmark integrity check。
-- 已验证：5 轮 paired trials，with-skill median total score +33.5，差异来自过程证据。
-- 新增：`tool-call-planner` task family，用策略优先级、风险选择、审批和注入防护来增加 hidden functional 区分度。
-- 未证明：当前 benchmark 没有显示 hidden functional uplift；baseline 和 with-skill 都是 10/10 hidden pass。
-- 未完成：包含 `tool-call-planner` 的 5 轮 paired trials、跨模型对比、成本/耗时统计。
+- 已验证：5 轮 paired trials，覆盖 3 个 task family，with-skill median total score +29.66，差异来自过程证据。
+- 已发现：`tool-call-planner` 成功增加 hidden functional 区分度，但 baseline 和 with-skill 都没有通过这类 hidden tests。
+- 未证明：当前 benchmark 没有显示 hidden functional uplift；baseline 和 with-skill 都是 10/15 hidden pass。
+- 未完成：把 `tool-call-planner` hidden miss 回流成 visible regression/task v2、跨模型对比、成本/耗时统计。
 
-下一步最有价值的是重跑 5 轮 paired trials，覆盖 3 个 task family，观察 hidden pass rate 是否开始拉开。
+下一步最有价值的是做 `tool-call-planner` v2：把已评分失败转成可见 regression，再跑新的 paired trials。
