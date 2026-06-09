@@ -30,10 +30,11 @@ The key point is narrower and stronger:
 ## Current Strengths
 
 - The repo now has a real Codex skill, not just prose.
-- The benchmark has two task families and hidden tests.
+- The benchmark has three task families and hidden tests.
 - `verify_benchmark.py` proves starter tasks fail and reference implementations pass.
 - The 5-trial paired run showed a stable process-score lift: median total delta +33.5, mean total delta +31.5.
 - Both conditions passed all hidden tests in the 5-trial run, which keeps the claim honest: the current evidence supports auditability and reproducibility, not functional correctness uplift.
+- `tool-call-planner` adds a harder AI-app-like task surface with policy precedence, risk choice, approval, missing arguments, and prompt-injection resistance.
 
 ## Weak Spots
 
@@ -41,11 +42,11 @@ The key point is narrower and stronger:
 - The benchmark measures process artifacts well, but it does not yet track cost, elapsed time, token use, or tool-call count.
 - The hidden-failure-to-regression workflow is described but not automated.
 - The artifact checker still keeps backward compatibility with `AI_TDD_REPORT.md`; new runs should prefer `EDD_REPORT.md`.
-- The current task families were easy enough that baseline agents also passed hidden tests; this makes the benchmark good for process evidence, but weak for proving functional uplift.
+- The two task families in the completed 5-trial run were easy enough that baseline agents also passed hidden tests; this makes the existing result good for process evidence, but weak for proving functional uplift.
 
 ## Next Improvements
 
-1. Add a third task family that is closer to AI app work, such as prompt classification, RAG answer grading, or tool-call planning.
+1. Run 5 paired trials across all three task families and compare hidden-pass-rate delta.
 2. Add cost/time metadata to each run's score JSON.
 3. Add a script that converts selected hidden failures into visible regression templates after scoring.
 4. Consider adding an alias skill or renamed skill folder for `$edd-skill` once compatibility is less important.

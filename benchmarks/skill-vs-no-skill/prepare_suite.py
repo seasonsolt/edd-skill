@@ -19,6 +19,10 @@ TASKS = {
         "starter_root": ROOT / "tasks" / "feature-flags",
         "prompt": ROOT / "tasks" / "feature-flags" / "task_prompt.md",
     },
+    "tool-call-planner": {
+        "starter_root": ROOT / "tasks" / "tool-call-planner",
+        "prompt": ROOT / "tasks" / "tool-call-planner" / "task_prompt.md",
+    },
 }
 
 

@@ -39,7 +39,7 @@ EDD Skill 约束的是这几件事：
 
 这已经能证明一个实际价值：当功能都能做对时，EDD Skill 让 agent coding loop 更可复现、更容易复盘，也更适合把失败回流成 regression。
 
-还不能证明的是：它稳定提高所有任务的功能正确性。要下这个结论，需要更难的 task family，例如 prompt eval、RAG、tool-call planning，或者能让 baseline 暴露 hidden miss 的任务。
+还不能证明的是：它稳定提高所有任务的功能正确性。为补这个证据缺口，repo 已新增更接近 AI app 的 `tool-call-planner` task family；它还没有进入上面这组 5-trial 结果。
 
 ## Repo 里有什么
 
@@ -55,6 +55,7 @@ EDD Skill 约束的是这几件事：
 benchmarks/skill-vs-no-skill/
   task/                             # quote-engine starter task
   tasks/feature-flags/              # feature-flags starter task
+  tasks/tool-call-planner/           # tool-call planning starter task
   hidden_tests/                     # 不给 agent 看的隐藏测试
   prepare_suite.py                  # 生成多任务 A/B run 目录
   score_suite.py                    # 聚合多任务分数
@@ -81,6 +82,7 @@ python3 benchmarks/skill-vs-no-skill/verify_benchmark.py
 ```text
 quote-engine: starter 0, reference public+hidden pass
 feature-flags: starter 0, reference public+hidden pass
+tool-call-planner: starter 0, reference public+hidden pass
 ```
 
 这一步很重要。否则 benchmark 本身不可信，后面再比较 agent 也没意义。
@@ -102,6 +104,8 @@ runs/skill-vs-no-skill-suite/quote-engine/baseline
 runs/skill-vs-no-skill-suite/quote-engine/with-skill
 runs/skill-vs-no-skill-suite/feature-flags/baseline
 runs/skill-vs-no-skill-suite/feature-flags/with-skill
+runs/skill-vs-no-skill-suite/tool-call-planner/baseline
+runs/skill-vs-no-skill-suite/tool-call-planner/with-skill
 ```
 
 每个目录里都有自己的 `PROMPT.md`。给每个 agent 只看它自己的 run 目录，不要暴露 `hidden_tests/`、`score_candidate.py` 或其它 sibling run。
@@ -150,9 +154,10 @@ EDD Skill 的价值在于把流程固定下来：
 
 这个 repo 还在早期。
 
-- 已完成：一个 Codex skill、两个 task family、hidden tests、suite scorer、trial scorer、benchmark integrity check。
+- 已完成：一个 Codex skill、三个 task family、hidden tests、suite scorer、trial scorer、benchmark integrity check。
 - 已验证：5 轮 paired trials，with-skill median total score +33.5，差异来自过程证据。
+- 新增：`tool-call-planner` task family，用策略优先级、风险选择、审批和注入防护来增加 hidden functional 区分度。
 - 未证明：当前 benchmark 没有显示 hidden functional uplift；baseline 和 with-skill 都是 10/10 hidden pass。
-- 未完成：更难的 AI-app task family、跨模型对比、成本/耗时统计。
+- 未完成：包含 `tool-call-planner` 的 5 轮 paired trials、跨模型对比、成本/耗时统计。
 
-下一步最有价值的是加第三个更难的 task family，让 hidden benchmark 能区分“写对功能”和“留下好过程”。
+下一步最有价值的是重跑 5 轮 paired trials，覆盖 3 个 task family，观察 hidden pass rate 是否开始拉开。

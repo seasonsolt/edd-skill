@@ -39,7 +39,7 @@ Record each A/B run here after scoring.
 - The improvement is entirely process evidence: eval contracts, red/green logs, regression tests, reports, and reproducibility artifacts.
 - The benchmark does not show functional correctness uplift in this run. Baseline and with-skill both passed every public and hidden test.
 - This is still useful evidence: EDD Skill changes the agent coding loop in a measurable way without depending on transcript claims.
-- The next stronger benchmark should add a harder AI-app task family where hidden tests can expose baseline misses.
+- The next stronger benchmark should run the newly added `tool-call-planner` task family, where hidden tests can expose policy and planning misses.
 
 ## Run 1
 
@@ -68,15 +68,15 @@ Record each A/B run here after scoring.
 ## Benchmark Integrity
 
 - Date: 2026-06-09
-- Task families: `quote-engine`, `feature-flags`
+- Task families: `quote-engine`, `feature-flags`, `tool-call-planner`
 - Command: `python3 benchmarks/skill-vs-no-skill/verify_benchmark.py`
 - Result: passed
-- Starter score: 0 for both task families.
-- Reference implementation: public and hidden tests pass for both task families.
+- Starter score: 0 for all three task families.
+- Reference implementation: public and hidden tests pass for all three task families.
 
 ## Credibility Status
 
 - Current evidence: 5 paired trials across `quote-engine` and `feature-flags`.
-- Benchmark coverage: two task families with public tests, hidden tests, reference implementations, and an integrity check.
+- Benchmark coverage: three task families with public tests, hidden tests, reference implementations, and an integrity check.
 - Claim strength: credible for process/auditability improvement, not credible yet for functional correctness uplift.
-- Next threshold: add a harder AI-app task family and report whether hidden-pass-rate delta changes.
+- Next threshold: run 5 paired trials across all three task families and report whether hidden-pass-rate delta changes.

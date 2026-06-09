@@ -23,6 +23,7 @@ This creates paired runs under:
 
 - `runs/skill-vs-no-skill-suite/quote-engine/`
 - `runs/skill-vs-no-skill-suite/feature-flags/`
+- `runs/skill-vs-no-skill-suite/tool-call-planner/`
 
 Each task has:
 
@@ -78,10 +79,10 @@ python3 benchmarks/skill-vs-no-skill/score_trials.py --trials-root runs/skill-vs
 
 This writes `runs/skill-vs-no-skill-trials/trials-summary.json`.
 
-Five trials across two task families require 20 independent agent runs:
+Five trials across the current three task families require 30 independent agent runs:
 
 ```text
-5 trials * 2 task families * 2 conditions = 20 runs
+5 trials * 3 task families * 2 conditions = 30 runs
 ```
 
 ## Benchmark Integrity Check

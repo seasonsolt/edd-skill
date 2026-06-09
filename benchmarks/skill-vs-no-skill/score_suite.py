@@ -14,7 +14,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 REPO_ROOT = ROOT.parents[1]
 SCORER = ROOT / "score_candidate.py"
-TASKS = ("quote-engine", "feature-flags")
+KNOWN_TASKS = ("quote-engine", "feature-flags", "tool-call-planner")
 
 
 def score_candidate(task: str, candidate: Path, output_path: Path) -> dict:
@@ -67,13 +67,17 @@ def main() -> int:
     args = parser.parse_args()
 
     runs_root = Path(args.runs_root).resolve()
+    tasks = [task for task in KNOWN_TASKS if (runs_root / task).exists()]
+    if not tasks:
+        tasks = list(KNOWN_TASKS)
+
     results = {}
     baseline_scores = []
     skill_scores = []
     functional_deltas = []
     process_deltas = []
 
-    for task in TASKS:
+    for task in tasks:
         task_root = runs_root / task
         baseline = task_root / "baseline"
         with_skill = task_root / "with-skill"

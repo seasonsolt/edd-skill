@@ -41,6 +41,19 @@ TASKS = {
             "invalid": ["invalid", "raises", "ValueError"],
         },
     },
+    "tool-call-planner": {
+        "starter_root": ROOT / "tasks" / "tool-call-planner",
+        "marker": "tool_call_planner/planner.py",
+        "starter_public_test": ROOT / "tasks" / "tool-call-planner" / "tests" / "test_public_planner.py",
+        "hidden_test": ROOT / "hidden_tests" / "test_hidden_tool_call_planner.py",
+        "edge_keywords": {
+            "policy": ["blocked_tools", "blocked_capabilities", "policy_blocked", "destructive_blocked"],
+            "missing": ["missing_args", "required_args", "clarify"],
+            "approval": ["approval_required", "approved_tools", "request_approval"],
+            "risk": ["lowest", "risk", "low", "medium", "high"],
+            "injection": ["ignore policy", "instruction", "prompt", "free text"],
+        },
+    },
 }
 
 

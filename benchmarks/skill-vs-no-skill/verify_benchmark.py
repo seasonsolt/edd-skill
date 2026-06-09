@@ -227,6 +227,123 @@ def evaluate_flag(flag: dict, user: dict) -> dict:
     return {"key": key, "enabled": flag["default"], "reason": "default", "bucket_bps": None}
 ''',
     },
+    "tool-call-planner": {
+        "starter": ROOT / "tasks" / "tool-call-planner",
+        "implementation": Path("tool_call_planner/planner.py"),
+        "reference": r'''
+RISK_ORDER = {"low": 0, "medium": 1, "high": 2}
+
+
+def _is_bool(value):
+    return type(value) is bool
+
+
+def _non_empty_string(value):
+    return isinstance(value, str) and bool(value)
+
+
+def _optional_string_list(mapping, key):
+    if key not in mapping:
+        return []
+    value = mapping[key]
+    if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+        raise ValueError(f"{key} must be a list of strings")
+    return value
+
+
+def _validate_request(request):
+    if not isinstance(request, dict):
+        raise ValueError("request must be a dict")
+    if not _non_empty_string(request.get("intent")):
+        raise ValueError("request intent is required")
+    if "args" in request and not isinstance(request["args"], dict):
+        raise ValueError("request args must be a dict")
+
+
+def _validate_tool(tool):
+    if not isinstance(tool, dict):
+        raise ValueError("tool must be a dict")
+    if not _non_empty_string(tool.get("name")):
+        raise ValueError("tool name is required")
+    if not _non_empty_string(tool.get("capability")):
+        raise ValueError("tool capability is required")
+    required_args = tool.get("required_args", [])
+    if not isinstance(required_args, list) or not all(isinstance(arg, str) for arg in required_args):
+        raise ValueError("required_args must be a list of strings")
+    risk = tool.get("risk", "low")
+    if risk not in RISK_ORDER:
+        raise ValueError("unknown risk")
+    if "destructive" in tool and not _is_bool(tool["destructive"]):
+        raise ValueError("destructive must be boolean")
+    if "requires_approval" in tool and not _is_bool(tool["requires_approval"]):
+        raise ValueError("requires_approval must be boolean")
+
+
+def _validate_policy(policy):
+    if not isinstance(policy, dict):
+        raise ValueError("policy must be a dict")
+    _optional_string_list(policy, "blocked_tools")
+    _optional_string_list(policy, "blocked_capabilities")
+    risks = _optional_string_list(policy, "approval_required_risks")
+    if any(risk not in RISK_ORDER for risk in risks):
+        raise ValueError("unknown approval risk")
+    if "allow_destructive" in policy and not _is_bool(policy["allow_destructive"]):
+        raise ValueError("allow_destructive must be boolean")
+
+
+def _validate_context(context):
+    if not isinstance(context, dict):
+        raise ValueError("context must be a dict")
+    if "known_args" in context and not isinstance(context["known_args"], dict):
+        raise ValueError("known_args must be a dict")
+    _optional_string_list(context, "approved_tools")
+
+
+def _risk(tool):
+    return tool.get("risk", "low")
+
+
+def plan_tool_calls(request: dict, available_tools: list[dict], policy: dict, context: dict) -> list[dict]:
+    _validate_request(request)
+    if not isinstance(available_tools, list):
+        raise ValueError("available_tools must be a list")
+    for tool in available_tools:
+        _validate_tool(tool)
+    _validate_policy(policy)
+    _validate_context(context)
+
+    intent = request["intent"]
+    matching = [(index, tool) for index, tool in enumerate(available_tools) if tool["capability"] == intent]
+    if not matching:
+        return [{"type": "clarify", "tool": None, "missing": ["tool"], "reason": "no_matching_tool"}]
+
+    if intent in policy.get("blocked_capabilities", []):
+        return [{"type": "refuse", "tool": None, "reason": "policy_blocked"}]
+
+    blocked_tools = set(policy.get("blocked_tools", []))
+    allowed = [(index, tool) for index, tool in matching if tool["name"] not in blocked_tools]
+    if not allowed:
+        return [{"type": "refuse", "tool": None, "reason": "policy_blocked"}]
+
+    _, chosen = min(allowed, key=lambda item: (RISK_ORDER[_risk(item[1])], item[0]))
+    if chosen.get("destructive", False) and policy.get("allow_destructive") is not True:
+        return [{"type": "refuse", "tool": chosen["name"], "reason": "destructive_blocked"}]
+
+    args = {}
+    args.update(context.get("known_args", {}))
+    args.update(request.get("args", {}))
+    required_args = chosen.get("required_args", [])
+    missing = [arg for arg in required_args if arg not in args]
+    if missing:
+        return [{"type": "clarify", "tool": chosen["name"], "missing": missing, "reason": "missing_args"}]
+
+    needs_approval = chosen.get("requires_approval", False) or _risk(chosen) in policy.get("approval_required_risks", [])
+    if needs_approval and chosen["name"] not in context.get("approved_tools", []):
+        return [{"type": "request_approval", "tool": chosen["name"], "reason": "approval_required"}]
+
+    return [{"type": "call_tool", "tool": chosen["name"], "args": args, "reason": "selected"}]
+''',
+    },
 }
 
 
