@@ -25,18 +25,21 @@ EDD Skill 约束的是这几件事：
 
 ## 已经测到的提升
 
-第一轮真实 A/B forward test 跑在 `quote-engine` 任务上。
+当前最可信的一轮实验是 5 个 paired trials，覆盖两个 task family：`quote-engine` 和 `feature-flags`。每个 trial 都有 baseline 与 with-skill 两个条件，hidden tests 和 scorer 都不暴露给 agent。
 
-| 条件 | 总分 | 功能分 | 过程分 | hidden tests |
-| --- | ---: | ---: | ---: | --- |
-| baseline | 79 / 100 | 65 / 65 | 14 / 35 | pass |
-| with EDD Skill | 99 / 100 | 65 / 65 | 34 / 35 | pass |
+| 指标 | baseline | with EDD Skill | delta |
+| --- | ---: | ---: | ---: |
+| median total score | 65.0 / 100 | 99.5 / 100 | +33.5 |
+| mean total score | 68.0 / 100 | 99.5 / 100 | +31.5 |
+| functional score | 65 / 65 | 65 / 65 | 0 |
+| process score range | 0-15 / 35 | 32-35 / 35 | +33.5 median |
+| hidden pass rate | 10 / 10 | 10 / 10 | 0 |
 
-这轮结果很克制：EDD Skill 没有提升功能正确性，因为 baseline agent 也把功能做对了。它提升的是 agent loop 的可审计性，with-skill run 留下了报告、`evals/red.log`、`evals/green.log`，后续可以复盘评估契约、验证证据和新增回归。
+客观结论很克制：EDD Skill 在这组任务上没有提升 hidden functional correctness，因为 baseline agent 也全部通过了 hidden tests。它稳定提升的是 agent coding loop 的可审计性：with-skill runs 持续留下 eval contract、red/green evidence、regression tests 和 `EDD_REPORT.md`。
 
-这已经能证明一个实际价值：当功能都能做对时，EDD Skill 让 agent coding loop 更可审计。
+这已经能证明一个实际价值：当功能都能做对时，EDD Skill 让 agent coding loop 更可复现、更容易复盘，也更适合把失败回流成 regression。
 
-还不能证明的是：它稳定提高所有任务的功能正确性。要下这个结论，需要更多 task family 和多轮 paired trials。
+还不能证明的是：它稳定提高所有任务的功能正确性。要下这个结论，需要更难的 task family，例如 prompt eval、RAG、tool-call planning，或者能让 baseline 暴露 hidden miss 的任务。
 
 ## Repo 里有什么
 
@@ -114,9 +117,8 @@ python3 benchmarks/skill-vs-no-skill/score_suite.py
 单轮只能算 smoke test。更可信的做法是跑多轮：
 
 ```bash
-python3 benchmarks/skill-vs-no-skill/prepare_suite.py --force --runs-root runs/skill-vs-no-skill-trials/trial-001
-python3 benchmarks/skill-vs-no-skill/prepare_suite.py --force --runs-root runs/skill-vs-no-skill-trials/trial-002
-python3 benchmarks/skill-vs-no-skill/score_trials.py --trials-root runs/skill-vs-no-skill-trials
+python3 benchmarks/skill-vs-no-skill/prepare_trials.py --clean-root --trial-count 5
+python3 benchmarks/skill-vs-no-skill/score_trials.py --trials-root runs/skill-vs-no-skill-trials --expected-trial-count 5
 ```
 
 看这些指标：
@@ -149,7 +151,8 @@ EDD Skill 的价值在于把流程固定下来：
 这个 repo 还在早期。
 
 - 已完成：一个 Codex skill、两个 task family、hidden tests、suite scorer、trial scorer、benchmark integrity check。
-- 已验证：`quote-engine` 单轮 A/B，with-skill 总分 +20，差异来自过程证据。
-- 未完成：`feature-flags` 的真实 A/B run，多轮 paired trials，跨模型对比。
+- 已验证：5 轮 paired trials，with-skill median total score +33.5，差异来自过程证据。
+- 未证明：当前 benchmark 没有显示 hidden functional uplift；baseline 和 with-skill 都是 10/10 hidden pass。
+- 未完成：更难的 AI-app task family、跨模型对比、成本/耗时统计。
 
-下一步最有价值的是跑 5 轮以上 paired trials，再看 median delta 是否稳定。
+下一步最有价值的是加第三个更难的 task family，让 hidden benchmark 能区分“写对功能”和“留下好过程”。

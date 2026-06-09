@@ -2,6 +2,45 @@
 
 Record each A/B run here after scoring.
 
+## Five-Trial Paired Experiment
+
+- Date: 2026-06-09
+- Model: inherited current Codex model for all worker agents
+- Task families: `quote-engine`, `feature-flags`
+- Trials: 5 paired trials, 10 baseline task runs, 10 with-skill task runs
+- Command: `python3 benchmarks/skill-vs-no-skill/score_trials.py --trials-root runs/skill-vs-no-skill-trials --expected-trial-count 5`
+
+### Aggregate Scores
+
+| Metric | Baseline | With EDD Skill | Delta |
+| --- | ---: | ---: | ---: |
+| Mean total score | 68.0 | 99.5 | +31.5 |
+| Median total score | 65.0 | 99.5 | +33.5 |
+| Worst trial mean score | 65.0 | 98.5 | +33.5 by condition |
+| Worst paired trial delta | - | - | +27.0 |
+| Functional score | 65 / 65 | 65 / 65 | 0 |
+| Process score range | 0-15 / 35 | 32-35 / 35 | +31.5 mean |
+| Process median delta | mixed | stable high | +33.5 |
+| Hidden pass rate | 10 / 10 | 10 / 10 | 0 |
+
+### Trial Deltas
+
+| Trial | Baseline mean | With-skill mean | Score delta | Process delta | Functional delta | Hidden pass |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| trial-001 | 65.0 | 100.0 | +35.0 | +35.0 | 0 | both 100% |
+| trial-002 | 65.0 | 99.5 | +34.5 | +34.5 | 0 | both 100% |
+| trial-003 | 72.5 | 99.5 | +27.0 | +27.0 | 0 | both 100% |
+| trial-004 | 72.5 | 100.0 | +27.5 | +27.5 | 0 | both 100% |
+| trial-005 | 65.0 | 98.5 | +33.5 | +33.5 | 0 | both 100% |
+
+### Interpretation
+
+- The median delta is stable across 5 trials: +33.5 total score, with worst trial delta +27.0.
+- The improvement is entirely process evidence: eval contracts, red/green logs, regression tests, reports, and reproducibility artifacts.
+- The benchmark does not show functional correctness uplift in this run. Baseline and with-skill both passed every public and hidden test.
+- This is still useful evidence: EDD Skill changes the agent coding loop in a measurable way without depending on transcript claims.
+- The next stronger benchmark should add a harder AI-app task family where hidden tests can expose baseline misses.
+
 ## Run 1
 
 - Date: 2026-06-09
@@ -37,7 +76,7 @@ Record each A/B run here after scoring.
 
 ## Credibility Status
 
-- Current evidence: one completed pair for `quote-engine`, zero completed pairs for `feature-flags`.
-- Benchmark coverage: two task families are now available.
-- Claim strength: enough for workflow smoke testing, not enough for a broad quality claim.
-- Next threshold: run at least 5 paired trials per task family and report medians, hidden-pass rates, process deltas, and worst-case scores.
+- Current evidence: 5 paired trials across `quote-engine` and `feature-flags`.
+- Benchmark coverage: two task families with public tests, hidden tests, reference implementations, and an integrity check.
+- Claim strength: credible for process/auditability improvement, not credible yet for functional correctness uplift.
+- Next threshold: add a harder AI-app task family and report whether hidden-pass-rate delta changes.

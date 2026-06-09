@@ -32,21 +32,21 @@ The key point is narrower and stronger:
 - The repo now has a real Codex skill, not just prose.
 - The benchmark has two task families and hidden tests.
 - `verify_benchmark.py` proves starter tasks fail and reference implementations pass.
-- The first real A/B run showed a +20 process-score lift on `quote-engine`.
+- The 5-trial paired run showed a stable process-score lift: median total delta +33.5, mean total delta +31.5.
+- Both conditions passed all hidden tests in the 5-trial run, which keeps the claim honest: the current evidence supports auditability and reproducibility, not functional correctness uplift.
 
 ## Weak Spots
 
-- Only one completed paired run exists so far.
-- `feature-flags` has integrity checks but no real baseline vs with-skill run yet.
 - The internal skill name is still `$eval-driven-ai-tdd`; this is compatible but less aligned with the product name `EDD Skill`.
 - The benchmark measures process artifacts well, but it does not yet track cost, elapsed time, token use, or tool-call count.
 - The hidden-failure-to-regression workflow is described but not automated.
 - The artifact checker still keeps backward compatibility with `AI_TDD_REPORT.md`; new runs should prefer `EDD_REPORT.md`.
+- The current task families were easy enough that baseline agents also passed hidden tests; this makes the benchmark good for process evidence, but weak for proving functional uplift.
 
 ## Next Improvements
 
-1. Run 5 paired trials for both task families and aggregate with `score_trials.py`.
-2. Add a third task family that is closer to AI app work, such as prompt classification, RAG answer grading, or tool-call planning.
-3. Add cost/time metadata to each run's score JSON.
-4. Add a script that converts selected hidden failures into visible regression templates after scoring.
-5. Consider adding an alias skill or renamed skill folder for `$edd-skill` once compatibility is less important.
+1. Add a third task family that is closer to AI app work, such as prompt classification, RAG answer grading, or tool-call planning.
+2. Add cost/time metadata to each run's score JSON.
+3. Add a script that converts selected hidden failures into visible regression templates after scoring.
+4. Consider adding an alias skill or renamed skill folder for `$edd-skill` once compatibility is less important.
+5. Add a result card or README figure that separates functional correctness, process evidence, and claim strength.
