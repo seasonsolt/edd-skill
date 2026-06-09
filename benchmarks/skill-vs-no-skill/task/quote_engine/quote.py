@@ -1,5 +1,7 @@
 """Usage-based invoice quote calculation."""
 
+from __future__ import annotations
+
 
 def quote_usage_invoice(
     usage_units: int,

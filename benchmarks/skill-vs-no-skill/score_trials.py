@@ -67,12 +67,17 @@ def main() -> int:
         required=True,
         help="Directory containing trial subdirectories, each prepared by prepare_suite.py",
     )
+    parser.add_argument("--expected-trial-count", type=int, help="Fail if the discovered trial count differs")
     args = parser.parse_args()
 
     trials_root = Path(args.trials_root).resolve()
     trial_dirs = sorted(path for path in trials_root.iterdir() if path.is_dir())
     if not trial_dirs:
         raise SystemExit(f"no trial directories found under {trials_root}")
+    if args.expected_trial_count is not None and len(trial_dirs) != args.expected_trial_count:
+        raise SystemExit(
+            f"expected {args.expected_trial_count} trial directories under {trials_root}, found {len(trial_dirs)}"
+        )
 
     trials = []
     for trial_dir in trial_dirs:

@@ -67,17 +67,22 @@ This writes `runs/skill-vs-no-skill-suite/suite-comparison.json`.
 For repeated trials, prepare each trial under a separate directory:
 
 ```bash
-python3 benchmarks/skill-vs-no-skill/prepare_suite.py --force --runs-root runs/skill-vs-no-skill-trials/trial-001
-python3 benchmarks/skill-vs-no-skill/prepare_suite.py --force --runs-root runs/skill-vs-no-skill-trials/trial-002
+python3 benchmarks/skill-vs-no-skill/prepare_trials.py --trial-count 5 --force --clean-root
 ```
 
 After agents complete each trial, aggregate them:
 
 ```bash
-python3 benchmarks/skill-vs-no-skill/score_trials.py --trials-root runs/skill-vs-no-skill-trials
+python3 benchmarks/skill-vs-no-skill/score_trials.py --trials-root runs/skill-vs-no-skill-trials --expected-trial-count 5
 ```
 
 This writes `runs/skill-vs-no-skill-trials/trials-summary.json`.
+
+Five trials across two task families require 20 independent agent runs:
+
+```text
+5 trials * 2 task families * 2 conditions = 20 runs
+```
 
 ## Benchmark Integrity Check
 

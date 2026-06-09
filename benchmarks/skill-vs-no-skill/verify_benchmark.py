@@ -19,6 +19,9 @@ TASKS = {
         "starter": ROOT / "task",
         "implementation": Path("quote_engine/quote.py"),
         "reference": r'''
+from __future__ import annotations
+
+
 def _is_int(value):
     return type(value) is int
 
