@@ -79,6 +79,9 @@ Before or during agent execution, inspect run status:
 python3 benchmarks/skill-vs-no-skill/trial_status.py --trials-root runs/skill-vs-no-skill-trials-5task --expected-trial-count 5
 ```
 
+Detailed execution rules are in
+[`FIVE_TASK_RUN_PLAN.md`](FIVE_TASK_RUN_PLAN.md).
+
 After agents complete each trial, aggregate them:
 
 ```bash

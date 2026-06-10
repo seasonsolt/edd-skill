@@ -85,12 +85,15 @@ def run_status(trial: str, task: str, condition: str, run_root: Path) -> dict[st
     changed = exists and implementation_changed(run_root, task)
     evidence = exists and has_evidence_artifact(run_root)
     tests_added = added_test_count(run_root, task) if exists else 0
+    has_candidate_activity = changed or evidence or tests_added > 0
 
     if not exists:
         status = "missing"
-    elif score:
+    elif score and has_candidate_activity:
         status = "scored"
-    elif changed or evidence or tests_added > 0:
+    elif score:
+        status = "scored_unmodified"
+    elif has_candidate_activity:
         status = "completed_unscored"
     else:
         status = "prepared"
@@ -145,15 +148,19 @@ def analyze(trials_root: Path, expected_trial_count: int | None) -> dict[str, An
         for task in KNOWN_TASKS
     }
     expected_runs = len(trial_dirs) * len(KNOWN_TASKS) * len(CONDITIONS)
-    scored_runs = status_counts["scored"]
+    score_json_runs = status_counts["scored"] + status_counts["scored_unmodified"]
+    completed_scored_runs = status_counts["scored"]
 
     return {
         "trials_root": str(trials_root),
         "trial_count": len(trial_dirs),
         "task_count": len(KNOWN_TASKS),
         "expected_runs": expected_runs,
-        "scored_runs": scored_runs,
-        "unscored_runs": expected_runs - scored_runs,
+        "score_json_runs": score_json_runs,
+        "completed_scored_runs": completed_scored_runs,
+        "scored_runs": score_json_runs,
+        "unscored_runs": expected_runs - score_json_runs,
+        "not_complete_runs": expected_runs - completed_scored_runs,
         "status_counts": dict(sorted(status_counts.items())),
         "by_condition": by_condition,
         "by_task": by_task,
@@ -180,7 +187,8 @@ def print_report(result: dict[str, Any], only_pending: bool) -> None:
         f"Volume: {result['trial_count']} trials, {result['task_count']} task families, "
         f"{result['expected_runs']} expected runs"
     )
-    print(f"Scored: {result['scored_runs']}/{result['expected_runs']}")
+    print(f"Score JSON: {result['score_json_runs']}/{result['expected_runs']}")
+    print(f"Completed scored: {result['completed_scored_runs']}/{result['expected_runs']}")
     print(f"Status counts: {result['status_counts']}")
     print(f"By condition: {result['by_condition']}")
     print(f"By task: {result['by_task']}")
@@ -216,7 +224,7 @@ def main() -> int:
     else:
         print_report(result, args.only_pending)
 
-    if args.strict_complete and result["unscored_runs"] != 0:
+    if args.strict_complete and result["not_complete_runs"] != 0:
         return 1
     return 0
 

@@ -91,6 +91,7 @@ benchmarks/skill-vs-no-skill/
   tasks/tool-call-planner-v2/        # hidden miss 回流后的 visible-regression task
   tasks/evidence-answerer/           # evidence-grounded answer starter task
   hidden_tests/                     # 不给 agent 看的隐藏测试
+  FIVE_TASK_RUN_PLAN.md             # 五任务 run/evaluate/rerun 执行计划
   assess_trials.py                  # 按固定门槛判断 skill 证据强度
   analyze_trials.py                 # 解释 not_supported / process leakage / hidden failure pattern
   prepare_suite.py                  # 生成多任务 A/B run 目录
