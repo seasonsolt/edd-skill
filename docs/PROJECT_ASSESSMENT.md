@@ -30,10 +30,12 @@ The key point is narrower and stronger:
 ## Current Strengths
 
 - The repo now has a real Codex skill, not just prose.
-- The benchmark has three task families and hidden tests.
+- The benchmark has four task families and hidden tests.
 - `verify_benchmark.py` proves starter tasks fail and reference implementations pass.
 - The latest 5-trial paired run across all three task families showed a stable process-score lift: median total delta +29.66, mean total delta +28.6.
 - `tool-call-planner` added a harder AI-app-like task surface with policy precedence, risk choice, approval, missing arguments, and prompt-injection resistance.
+- `evidence-answerer` adds a RAG-like deterministic task surface with citations, insufficient evidence, trusted/untrusted sources, conflicting facts, and instruction-like text inside passages.
+- `assess_trials.py` now turns scored trial output into an explicit evidence verdict instead of relying on README interpretation.
 - The harder task exposed hidden functional misses in both conditions: baseline and with-skill each passed 10 / 15 hidden task runs.
 
 ## Weak Spots
@@ -43,11 +45,12 @@ The key point is narrower and stronger:
 - The hidden-failure-to-regression workflow is described but not automated, and `tool-call-planner` now gives concrete failures to feed into it.
 - The artifact checker still keeps backward compatibility with `AI_TDD_REPORT.md`; new runs should prefer `EDD_REPORT.md`.
 - The skill has not yet improved hidden functional correctness; its demonstrated value remains process evidence, auditability, and reproducibility.
+- The new four-task suite has passed integrity checks, but it has not yet been run as a full paired trial set.
 
 ## Next Improvements
 
-1. Create `tool-call-planner` v2 by converting scored hidden misses into visible regressions without leaking the original hidden tests.
-2. Rerun 5 paired trials on the v2 task and compare hidden-pass-rate delta.
+1. Run 5 paired trials on the four-task suite and record the `assess_trials.py` verdict.
+2. Create `tool-call-planner` v2 by converting scored hidden misses into visible regressions without leaking the original hidden tests.
 3. Add cost/time metadata to each run's score JSON.
 4. Add a script that converts selected hidden failures into visible regression templates after scoring.
 5. Consider adding an alias skill or renamed skill folder for `$edd-skill` once compatibility is less important.

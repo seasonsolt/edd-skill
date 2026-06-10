@@ -25,7 +25,7 @@ EDD Skill 约束的是这几件事：
 
 ## 已经测到的提升
 
-当前最可信的一轮实验是 5 个 paired trials，覆盖三个 task family：`quote-engine`、`feature-flags`、`tool-call-planner`。每个 trial 都有 baseline 与 with-skill 两个条件，hidden tests 和 scorer 都不暴露给 agent。
+当前最可信的一轮正式实验是 5 个 paired trials，覆盖三个 task family：`quote-engine`、`feature-flags`、`tool-call-planner`。每个 trial 都有 baseline 与 with-skill 两个条件，hidden tests 和 scorer 都不暴露给 agent。
 
 | 指标 | baseline | with EDD Skill | delta |
 | --- | ---: | ---: | ---: |
@@ -40,7 +40,7 @@ EDD Skill 约束的是这几件事：
 
 这已经能证明一个实际价值：EDD Skill 让 agent coding loop 更可复现、更容易复盘，也更适合把失败回流成 regression。但它不是功能正确性的自动保证。
 
-下一步应该把 `tool-call-planner` 的已评分 hidden miss 回流成 agent-visible regression 或 task v2，再验证 skill 是否能把这类规划边界纳入 coding loop。
+下一步不是假设它有效，而是扩大 benchmark loop：新增 task family、用判定脚本给出 `functional_supported` / `process_only_supported` / `not_supported` / `insufficient_evidence`，再看结果是否仍然站得住。
 
 ## Repo 里有什么
 
@@ -57,7 +57,9 @@ benchmarks/skill-vs-no-skill/
   task/                             # quote-engine starter task
   tasks/feature-flags/              # feature-flags starter task
   tasks/tool-call-planner/           # tool-call planning starter task
+  tasks/evidence-answerer/           # evidence-grounded answer starter task
   hidden_tests/                     # 不给 agent 看的隐藏测试
+  assess_trials.py                  # 按固定门槛判断 skill 证据强度
   prepare_suite.py                  # 生成多任务 A/B run 目录
   score_suite.py                    # 聚合多任务分数
   score_trials.py                   # 聚合多轮 trial
@@ -84,6 +86,7 @@ python3 benchmarks/skill-vs-no-skill/verify_benchmark.py
 quote-engine: starter 0, reference public+hidden pass
 feature-flags: starter 0, reference public+hidden pass
 tool-call-planner: starter 0, reference public+hidden pass
+evidence-answerer: starter 0, reference public+hidden pass
 ```
 
 这一步很重要。否则 benchmark 本身不可信，后面再比较 agent 也没意义。
@@ -107,6 +110,8 @@ runs/skill-vs-no-skill-suite/feature-flags/baseline
 runs/skill-vs-no-skill-suite/feature-flags/with-skill
 runs/skill-vs-no-skill-suite/tool-call-planner/baseline
 runs/skill-vs-no-skill-suite/tool-call-planner/with-skill
+runs/skill-vs-no-skill-suite/evidence-answerer/baseline
+runs/skill-vs-no-skill-suite/evidence-answerer/with-skill
 ```
 
 每个目录里都有自己的 `PROMPT.md`。给每个 agent 只看它自己的 run 目录，不要暴露 `hidden_tests/`、`score_candidate.py` 或其它 sibling run。
@@ -124,6 +129,12 @@ python3 benchmarks/skill-vs-no-skill/score_suite.py
 ```bash
 python3 benchmarks/skill-vs-no-skill/prepare_trials.py --clean-root --trial-count 5
 python3 benchmarks/skill-vs-no-skill/score_trials.py --trials-root runs/skill-vs-no-skill-trials --expected-trial-count 5
+```
+
+然后让固定判定脚本评估证据强度：
+
+```bash
+python3 benchmarks/skill-vs-no-skill/assess_trials.py --trials-root runs/skill-vs-no-skill-trials
 ```
 
 看这些指标：
@@ -155,10 +166,11 @@ EDD Skill 的价值在于把流程固定下来：
 
 这个 repo 还在早期。
 
-- 已完成：一个 Codex skill、三个 task family、hidden tests、suite scorer、trial scorer、benchmark integrity check。
-- 已验证：5 轮 paired trials，覆盖 3 个 task family，with-skill median total score +29.66，差异来自过程证据。
+- 已完成：一个 Codex skill、四个 task family、hidden tests、suite scorer、trial scorer、benchmark integrity check、trial assessment gate。
+- 已验证：5 轮 paired trials，覆盖 3 个旧 task family，with-skill median total score +29.66，差异来自过程证据。
+- 已新增：`evidence-answerer`，覆盖证据引用、冲突证据、不可信来源和文本注入；它已通过 integrity check，但还没有正式 paired trial 结果。
 - 已发现：`tool-call-planner` 成功增加 hidden functional 区分度，但 baseline 和 with-skill 都没有通过这类 hidden tests。
 - 未证明：当前 benchmark 没有显示 hidden functional uplift；baseline 和 with-skill 都是 10/15 hidden pass。
-- 未完成：把 `tool-call-planner` hidden miss 回流成 visible regression/task v2、跨模型对比、成本/耗时统计。
+- 未完成：跑四任务 5+ 轮 paired trials、把 `tool-call-planner` hidden miss 回流成 visible regression/task v2、跨模型对比、成本/耗时统计。
 
-下一步最有价值的是做 `tool-call-planner` v2：把已评分失败转成可见 regression，再跑新的 paired trials。
+下一步最有价值的是跑四任务 benchmark loop：`5 trials * 4 task families * 2 conditions = 40 runs`，然后用 `assess_trials.py` 输出证据等级。它完全可能给出 `process_only_supported`、`not_supported` 或 `insufficient_evidence`，这比预设 skill 有效更重要。

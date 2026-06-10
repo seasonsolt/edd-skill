@@ -24,6 +24,7 @@ This creates paired runs under:
 - `runs/skill-vs-no-skill-suite/quote-engine/`
 - `runs/skill-vs-no-skill-suite/feature-flags/`
 - `runs/skill-vs-no-skill-suite/tool-call-planner/`
+- `runs/skill-vs-no-skill-suite/evidence-answerer/`
 
 Each task has:
 
@@ -79,11 +80,26 @@ python3 benchmarks/skill-vs-no-skill/score_trials.py --trials-root runs/skill-vs
 
 This writes `runs/skill-vs-no-skill-trials/trials-summary.json`.
 
-Five trials across the current three task families require 30 independent agent runs:
+Five trials across the current four task families require 40 independent agent runs:
 
 ```text
-5 trials * 3 task families * 2 conditions = 30 runs
+5 trials * 4 task families * 2 conditions = 40 runs
 ```
+
+After scoring, run the fixed assessment gate:
+
+```bash
+python3 benchmarks/skill-vs-no-skill/assess_trials.py --trials-root runs/skill-vs-no-skill-trials
+```
+
+The assessment can return:
+
+- `functional_and_process_supported`: functional hidden/eval signal and process signal both improved.
+- `functional_supported`: functional signal improved without enough process signal.
+- `process_only_supported`: process/auditability improved, but hidden functional signal did not.
+- `functional_regression`: with-skill regressed hidden or functional results.
+- `not_supported`: enough benchmark volume, but thresholds were not met.
+- `insufficient_evidence`: not enough trials or task families.
 
 ## Benchmark Integrity Check
 
@@ -112,7 +128,7 @@ The score has two parts:
 - Functional score: public tests plus private contract cases.
 - Process score: evidence of eval-first behavior, tests, red/green logs, and report quality.
 
-The expected signal is not that the skill always wins every hidden test. The expected signal is that the skill run leaves better regression coverage and more reproducible evidence, while at least matching functional quality.
+Do not assume the skill will help. A valid experiment may show functional improvement, process-only improvement, no measurable effect, functional regression, or insufficient evidence. The benchmark loop exists to separate those outcomes.
 
 ## Interpreting Results
 

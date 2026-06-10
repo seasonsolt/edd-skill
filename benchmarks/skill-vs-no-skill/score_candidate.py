@@ -54,6 +54,19 @@ TASKS = {
             "injection": ["ignore policy", "instruction", "prompt", "free text"],
         },
     },
+    "evidence-answerer": {
+        "starter_root": ROOT / "tasks" / "evidence-answerer",
+        "marker": "evidence_answerer/answerer.py",
+        "starter_public_test": ROOT / "tasks" / "evidence-answerer" / "tests" / "test_public_answerer.py",
+        "hidden_test": ROOT / "hidden_tests" / "test_hidden_evidence_answerer.py",
+        "edge_keywords": {
+            "citations": ["citation", "citations", "source", "sources"],
+            "conflict": ["conflict", "distinct", "disagree"],
+            "trust": ["trusted", "untrusted", "ignore"],
+            "facts": ["Fact:", "fact", "key", "value"],
+            "invalid": ["invalid", "raises", "ValueError"],
+        },
+    },
 }
 
 

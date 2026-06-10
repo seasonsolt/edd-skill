@@ -14,7 +14,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 REPO_ROOT = ROOT.parents[1]
 SCORER = ROOT / "score_candidate.py"
-KNOWN_TASKS = ("quote-engine", "feature-flags", "tool-call-planner")
+KNOWN_TASKS = ("quote-engine", "feature-flags", "tool-call-planner", "evidence-answerer")
 
 
 def score_candidate(task: str, candidate: Path, output_path: Path) -> dict:

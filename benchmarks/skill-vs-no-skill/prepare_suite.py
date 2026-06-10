@@ -23,6 +23,10 @@ TASKS = {
         "starter_root": ROOT / "tasks" / "tool-call-planner",
         "prompt": ROOT / "tasks" / "tool-call-planner" / "task_prompt.md",
     },
+    "evidence-answerer": {
+        "starter_root": ROOT / "tasks" / "evidence-answerer",
+        "prompt": ROOT / "tasks" / "evidence-answerer" / "task_prompt.md",
+    },
 }
 
 

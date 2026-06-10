@@ -2,6 +2,16 @@
 
 Record each A/B run here after scoring.
 
+## Next Benchmark Loop: Four-Task Suite
+
+- Added: `evidence-answerer`
+- Coverage: evidence-grounded answering, citations, insufficient evidence, conflicting trusted facts, untrusted sources, and prompt-injection-like passage text.
+- Integrity status: `python3 benchmarks/skill-vs-no-skill/verify_benchmark.py` passes for all four task families.
+- Planned run size: 5 paired trials, 20 baseline task runs, 20 with-skill task runs.
+- Assessment command: `python3 benchmarks/skill-vs-no-skill/assess_trials.py --trials-root runs/skill-vs-no-skill-trials`
+
+This loop should be allowed to falsify the skill. A valid outcome can be `process_only_supported`, `not_supported`, `functional_regression`, or `insufficient_evidence`.
+
 ## Five-Trial Paired Experiment: Three-Task Suite
 
 - Date: 2026-06-10
@@ -107,15 +117,15 @@ Record each A/B run here after scoring.
 ## Benchmark Integrity
 
 - Date: 2026-06-10
-- Task families: `quote-engine`, `feature-flags`, `tool-call-planner`
+- Task families: `quote-engine`, `feature-flags`, `tool-call-planner`, `evidence-answerer`
 - Command: `python3 benchmarks/skill-vs-no-skill/verify_benchmark.py`
 - Result: passed
-- Starter score: 0 for all three task families.
-- Reference implementation: public and hidden tests pass for all three task families.
+- Starter score: 0 for all four task families.
+- Reference implementation: public and hidden tests pass for all four task families.
 
 ## Credibility Status
 
 - Current evidence: 5 paired trials across `quote-engine`, `feature-flags`, and `tool-call-planner`.
-- Benchmark coverage: three task families with public tests, hidden tests, reference implementations, and an integrity check.
+- Benchmark coverage: four task families with public tests, hidden tests, reference implementations, and an integrity check.
 - Claim strength: credible for process/auditability improvement, not credible yet for functional correctness uplift.
-- Next threshold: convert scored `tool-call-planner` hidden misses into visible regressions or a v2 task, then rerun paired trials.
+- Next threshold: run the four-task suite for 5+ paired trials and require `assess_trials.py` to report the evidence level.

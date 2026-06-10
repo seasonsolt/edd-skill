@@ -344,6 +344,85 @@ def plan_tool_calls(request: dict, available_tools: list[dict], policy: dict, co
     return [{"type": "call_tool", "tool": chosen["name"], "args": args, "reason": "selected"}]
 ''',
     },
+    "evidence-answerer": {
+        "starter": ROOT / "tasks" / "evidence-answerer",
+        "implementation": Path("evidence_answerer/answerer.py"),
+        "reference": r'''
+import re
+
+
+def _normalize_key(value):
+    return value.strip().lower()
+
+
+def _dedupe(values):
+    seen = set()
+    result = []
+    for value in values:
+        if value not in seen:
+            seen.add(value)
+            result.append(value)
+    return result
+
+
+def _requested_key(question):
+    if not isinstance(question, str) or not question.strip():
+        raise ValueError("question must be a non-empty string")
+    match = re.match(r"^What is\s+(.+?)\?$", question.strip(), re.IGNORECASE)
+    if not match:
+        raise ValueError("unsupported question shape")
+    return _normalize_key(match.group(1))
+
+
+def _validate_passage(passage):
+    if not isinstance(passage, dict):
+        raise ValueError("passage must be a dict")
+    if not isinstance(passage.get("id"), str) or not passage["id"]:
+        raise ValueError("passage id is required")
+    if not isinstance(passage.get("text"), str):
+        raise ValueError("passage text must be a string")
+    trusted = passage.get("trusted", True)
+    if type(trusted) is not bool:
+        raise ValueError("trusted must be boolean")
+    return trusted
+
+
+def _facts_for_key(text, key):
+    facts = []
+    for line in text.splitlines():
+        match = re.match(r"^Fact:\s*(.*?)\s*=\s*(.*?)\s*$", line)
+        if match and _normalize_key(match.group(1)) == key:
+            facts.append(match.group(2).strip())
+    return facts
+
+
+def answer_question(question: str, passages: list[dict]) -> dict:
+    key = _requested_key(question)
+    if not isinstance(passages, list):
+        raise ValueError("passages must be a list")
+
+    observations = []
+    for passage in passages:
+        trusted = _validate_passage(passage)
+        if not trusted:
+            continue
+        seen_values = set()
+        for value in _facts_for_key(passage["text"], key):
+            if value not in seen_values:
+                observations.append((passage["id"], value))
+                seen_values.add(value)
+
+    if not observations:
+        return {"status": "insufficient_evidence", "answer": None, "citations": []}
+
+    values = _dedupe([value for _, value in observations])
+    citations = _dedupe([source_id for source_id, _ in observations])
+    if len(values) > 1:
+        return {"status": "conflict", "answer": None, "citations": citations}
+
+    return {"status": "answered", "answer": values[0], "citations": citations}
+''',
+    },
 }
 
 
