@@ -47,6 +47,8 @@ The key point is narrower and stronger:
 - The skill has not improved hidden functional correctness in the current benchmark: functional delta is 0 and hidden pass delta is 0.
 - The current four-task result is `not_supported` under the fixed assessment gate. Although with-skill had a numeric process-score lift, the median process delta was +19.75 against a +20 threshold.
 - Baseline can already produce EDD-like artifacts in some runs. Trial 005 `feature-flags` baseline scored full process credit, which weakens the claim that the skill uniquely causes process discipline.
+- The new `analyze_trials.py` diagnostic makes this explicit: baseline complete evidence is 1 / 20, with-skill complete evidence is 20 / 20, and hidden pass delta is still 0.
+- `tool-call-planner` has a stable public-green/hidden-red failure category in both conditions, so it is now the main source for a v2 task or visible regression.
 
 ## Next Improvements
 
@@ -54,4 +56,4 @@ The key point is narrower and stronger:
 2. Create `tool-call-planner` v2 by converting scored hidden misses into visible regressions without leaking the original hidden tests.
 3. Add cost/time metadata to each run's score JSON.
 4. Add a script that converts selected hidden failures into visible regression templates after scoring.
-5. Investigate why baseline runs can produce EDD-like artifacts and whether the benchmark prompt itself is already enough to induce the desired loop.
+5. Investigate why baseline runs can produce EDD-like artifacts and whether the benchmark prompt itself is already enough to induce the desired loop. The first diagnostic is now available through `analyze_trials.py`; the next step is to compare prompts and generated artifacts, not just scores.

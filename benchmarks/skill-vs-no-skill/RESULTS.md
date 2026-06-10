@@ -73,6 +73,38 @@ Verdict: `not_supported`.
 - Trial 005 shows an important confound: a baseline `feature-flags` run produced EDD-like artifacts and scored full process credit. That suggests the skill may not be uniquely responsible for process discipline under this prompt/model setup.
 - The next loop should analyze why `tool-call-planner` remains hard and why baseline can already produce high process evidence, instead of lowering thresholds after seeing the result.
 
+### Failure Review Diagnostic
+
+Command:
+
+```bash
+python3 benchmarks/skill-vs-no-skill/analyze_trials.py --trials-root runs/skill-vs-no-skill-trials-4task --json-output runs/skill-vs-no-skill-trials-4task/diagnostics.json
+```
+
+Diagnostic output:
+
+| Diagnostic | Baseline | With EDD Skill |
+| --- | ---: | ---: |
+| Mean process score | 14.95 / 35 | 33.95 / 35 |
+| Complete evidence runs | 1 / 20 | 20 / 20 |
+| High-process runs | 1 / 20 | 20 / 20 |
+| Hidden passed | 15 / 20 | 15 / 20 |
+
+Baseline artifact leakage:
+
+- `trial-005` / `feature-flags` baseline scored 35 / 35 process and left `EDD_REPORT.md`, `evals/red.log`, and `evals/green.log`.
+
+Hidden failure pattern:
+
+- `tool-call-planner` is public-green/hidden-red in all 10 runs.
+- The failure category is stable across both conditions: `no_matching_tool_clarification_boundary`.
+
+Interpretation:
+
+- The with-skill process lift is stable and file-backed, but hidden correctness did not improve.
+- The process claim is also weakened by one complete baseline EDD-like artifact set.
+- The next benchmark loop should create a visible `tool-call-planner` v2/regression around this behavior class after scoring, then rerun paired trials.
+
 ## Five-Trial Paired Experiment: Three-Task Suite
 
 - Date: 2026-06-10

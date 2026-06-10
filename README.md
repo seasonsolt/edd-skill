@@ -43,6 +43,26 @@ EDD Skill 约束的是这几件事：
 
 下一步应该把这次失败当作输入：分析 baseline 为什么也能自然地产生高过程证据、把 `tool-call-planner` hidden miss 转成 visible regression/task v2，再跑下一轮。不要为了让 skill 看起来有效而调低 gate。
 
+### 失败复盘诊断
+
+新增诊断脚本会读取已评分的 run artifacts，解释为什么 verdict 是
+`not_supported`：
+
+```bash
+python3 benchmarks/skill-vs-no-skill/analyze_trials.py --trials-root runs/skill-vs-no-skill-trials-4task
+```
+
+当前诊断结论：
+
+- baseline mean process score: `14.95 / 35`
+- with-skill mean process score: `33.95 / 35`
+- baseline complete evidence runs: `1 / 20`
+- with-skill complete evidence runs: `20 / 20`
+- hidden pass delta: `0`
+- `tool-call-planner` public-green/hidden-red failures: baseline `5 / 5`, with-skill `5 / 5`
+
+这说明 skill 确实让 agent 更稳定地留下评估证据，但还没有证明能提升 hidden correctness。失败复盘见 [docs/FOUR_TASK_BENCHMARK_REVIEW.md](docs/FOUR_TASK_BENCHMARK_REVIEW.md)。
+
 ## Repo 里有什么
 
 ```text
@@ -61,6 +81,7 @@ benchmarks/skill-vs-no-skill/
   tasks/evidence-answerer/           # evidence-grounded answer starter task
   hidden_tests/                     # 不给 agent 看的隐藏测试
   assess_trials.py                  # 按固定门槛判断 skill 证据强度
+  analyze_trials.py                 # 解释 not_supported / process leakage / hidden failure pattern
   prepare_suite.py                  # 生成多任务 A/B run 目录
   score_suite.py                    # 聚合多任务分数
   score_trials.py                   # 聚合多轮 trial
@@ -138,6 +159,12 @@ python3 benchmarks/skill-vs-no-skill/score_trials.py --trials-root runs/skill-vs
 python3 benchmarks/skill-vs-no-skill/assess_trials.py --trials-root runs/skill-vs-no-skill-trials
 ```
 
+如果结果没有支撑 claim，再跑诊断：
+
+```bash
+python3 benchmarks/skill-vs-no-skill/analyze_trials.py --trials-root runs/skill-vs-no-skill-trials
+```
+
 看这些指标：
 
 - median total score
@@ -168,6 +195,7 @@ EDD Skill 试图把这些流程固定下来：
 这个 repo 还在早期。
 
 - 已完成：一个 Codex skill、四个 task family、hidden tests、suite scorer、trial scorer、benchmark integrity check、trial assessment gate。
+- 已补充：trial diagnostics，用来解释 baseline artifact leakage 和 public-green/hidden-red failure pattern。
 - 已验证：5 轮 paired trials，覆盖 4 个 task family，40 个独立 worker runs。
 - 已发现：`tool-call-planner` 成功增加 hidden functional 区分度，但 baseline 和 with-skill 都没有通过这类 hidden tests。
 - 已判定：`assess_trials.py` 在默认门槛下给出 `not_supported`。当前 skill 没有证明 hidden functional uplift，也没有过 process-effect gate。
