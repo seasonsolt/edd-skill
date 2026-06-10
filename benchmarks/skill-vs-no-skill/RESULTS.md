@@ -224,6 +224,7 @@ Interpretation:
 - New visible behavior: if no tool capability matches `request["intent"]`, return a clarification with `tool: None`, `missing: ["tool"]`, and `reason: "no_matching_tool"`.
 - Smoke command: `python3 benchmarks/skill-vs-no-skill/score_suite.py --runs-root runs/skill-vs-no-skill-suite-v2-smoke`
 - Smoke result: default suite recognizes 5 task families and starter paired copies all score 0.
+- Trial status command: `python3 benchmarks/skill-vs-no-skill/trial_status.py --trials-root runs/skill-vs-no-skill-trials-5task --expected-trial-count 5`
 
 This revision does not change the four-task verdict above. It defines the next
 benchmark loop. Five paired trials over the current suite now require 50 agent

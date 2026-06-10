@@ -94,6 +94,7 @@ benchmarks/skill-vs-no-skill/
   assess_trials.py                  # 按固定门槛判断 skill 证据强度
   analyze_trials.py                 # 解释 not_supported / process leakage / hidden failure pattern
   prepare_suite.py                  # 生成多任务 A/B run 目录
+  trial_status.py                   # 跟踪多轮 agent run 是否完成/评分
   score_suite.py                    # 聚合多任务分数
   score_trials.py                   # 聚合多轮 trial
   verify_benchmark.py               # 证明 starter 红、参考实现绿
@@ -163,14 +164,15 @@ python3 benchmarks/skill-vs-no-skill/score_suite.py
 单轮只能算 smoke test。更可信的做法是跑多轮：
 
 ```bash
-python3 benchmarks/skill-vs-no-skill/prepare_trials.py --clean-root --trial-count 5
-python3 benchmarks/skill-vs-no-skill/score_trials.py --trials-root runs/skill-vs-no-skill-trials --expected-trial-count 5
+python3 benchmarks/skill-vs-no-skill/prepare_trials.py --trials-root runs/skill-vs-no-skill-trials-5task --clean-root --trial-count 5
+python3 benchmarks/skill-vs-no-skill/trial_status.py --trials-root runs/skill-vs-no-skill-trials-5task --expected-trial-count 5
+python3 benchmarks/skill-vs-no-skill/score_trials.py --trials-root runs/skill-vs-no-skill-trials-5task --expected-trial-count 5
 ```
 
 然后让固定判定脚本评估证据强度：
 
 ```bash
-python3 benchmarks/skill-vs-no-skill/assess_trials.py --trials-root runs/skill-vs-no-skill-trials
+python3 benchmarks/skill-vs-no-skill/assess_trials.py --trials-root runs/skill-vs-no-skill-trials-5task
 ```
 
 如果结果没有支撑 claim，再跑诊断：

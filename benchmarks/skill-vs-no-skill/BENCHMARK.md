@@ -70,16 +70,22 @@ This writes `runs/skill-vs-no-skill-suite/suite-comparison.json`.
 For repeated trials, prepare each trial under a separate directory:
 
 ```bash
-python3 benchmarks/skill-vs-no-skill/prepare_trials.py --trial-count 5 --force --clean-root
+python3 benchmarks/skill-vs-no-skill/prepare_trials.py --trials-root runs/skill-vs-no-skill-trials-5task --trial-count 5 --clean-root
+```
+
+Before or during agent execution, inspect run status:
+
+```bash
+python3 benchmarks/skill-vs-no-skill/trial_status.py --trials-root runs/skill-vs-no-skill-trials-5task --expected-trial-count 5
 ```
 
 After agents complete each trial, aggregate them:
 
 ```bash
-python3 benchmarks/skill-vs-no-skill/score_trials.py --trials-root runs/skill-vs-no-skill-trials --expected-trial-count 5
+python3 benchmarks/skill-vs-no-skill/score_trials.py --trials-root runs/skill-vs-no-skill-trials-5task --expected-trial-count 5
 ```
 
-This writes `runs/skill-vs-no-skill-trials/trials-summary.json`.
+This writes `runs/skill-vs-no-skill-trials-5task/trials-summary.json`.
 
 Five trials across the current five task families require 50 independent agent runs:
 
@@ -90,7 +96,7 @@ Five trials across the current five task families require 50 independent agent r
 After scoring, run the fixed assessment gate:
 
 ```bash
-python3 benchmarks/skill-vs-no-skill/assess_trials.py --trials-root runs/skill-vs-no-skill-trials
+python3 benchmarks/skill-vs-no-skill/assess_trials.py --trials-root runs/skill-vs-no-skill-trials-5task
 ```
 
 The assessment can return:
