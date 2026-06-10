@@ -25,53 +25,54 @@ EDD Skill 约束的是这几件事：
 
 ## 最新 benchmark 结论
 
-当前最可信的一轮正式实验是 5 个 paired trials，覆盖四个 task family：`quote-engine`、`feature-flags`、`tool-call-planner`、`evidence-answerer`。每个 trial 都有 baseline 与 with-skill 两个条件，hidden tests 和 scorer 都不暴露给 agent。
+当前最可信的一轮正式实验是 5 个 paired trials，覆盖五个 task family：`quote-engine`、`feature-flags`、`tool-call-planner`、`tool-call-planner-v2`、`evidence-answerer`。每个 trial 都有 baseline 与 with-skill 两个条件，hidden tests 和 scorer 都不暴露给 agent。
 
 | 指标 | baseline | with EDD Skill | delta |
 | --- | ---: | ---: | ---: |
-| median total score | 66.5 / 100 | 86.5 / 100 | +19.75 |
-| mean total score | 67.45 / 100 | 86.45 / 100 | +19.0 |
+| median total score | 62.8 / 100 | 88.8 / 100 | +25.8 |
+| mean total score | 62.84 / 100 | 88.72 / 100 | +25.88 |
 | median functional delta | - | - | 0 |
-| median process delta | - | - | +19.75 |
-| hidden pass rate | 15 / 20 | 15 / 20 | 0 |
+| median process delta | - | - | +25.8 |
+| hidden pass rate | 20 / 25 | 20 / 25 | 0 |
 | `tool-call-planner` hidden pass rate | 0 / 5 | 0 / 5 | 0 |
-| `assess_trials.py` verdict | - | - | `not_supported` |
+| `tool-call-planner-v2` hidden pass rate | 5 / 5 | 5 / 5 | 0 |
+| `assess_trials.py` verdict | - | - | `process_only_supported` |
 
-客观结论更严格：在四任务 benchmark 上，EDD Skill 没有提升 hidden functional correctness。`quote-engine`、`feature-flags`、`evidence-answerer` 两边都通过 hidden tests；`tool-call-planner` 两边都失败。with-skill 的过程分更高，但 median process delta 是 `+19.75`，低于预先设定的 `+20` gate，所以固定判定脚本给出 `not_supported`。
+客观结论更严格：在五任务 benchmark 上，EDD Skill 没有提升 hidden functional correctness。`quote-engine`、`feature-flags`、`tool-call-planner-v2`、`evidence-answerer` 两边都通过 hidden tests；`tool-call-planner` 两边都失败。with-skill 的过程分更高，并且 median process delta 是 `+25.8`，超过预先设定的 `+20` gate，所以固定判定脚本给出 `process_only_supported`。
 
-这不是坏结果，反而是 benchmark loop 应该给出的结果：它说明当前 skill 还不能被认为有效。它可能仍然有过程提醒价值，但在这轮更严格的证据门槛下，没有证明出可宣称的效果。
+这不是“能力提升”结果。更准确的说法是：当前 skill 能稳定改变 agent coding loop，让 red/green logs、regression tests、报告和证据链更完整；但它还没有证明能让 agent 多通过 hidden tests。
 
-下一步应该把这次失败当作输入：分析 baseline 为什么也能自然地产生高过程证据、把 `tool-call-planner` hidden miss 转成 visible regression/task v2，再跑下一轮。不要为了让 skill 看起来有效而调低 gate。
+下一步应该把这次结果当作输入：如果目标是 process/reproducibility claim，可以跑独立 confirmation root；如果目标是 functional uplift，就不要重复同一套实验，而是先只改一个变量，比如 skill 指令、visible contract 设计、任务组合或模型设置。
 
 ### 失败复盘诊断
 
 新增诊断脚本会读取已评分的 run artifacts，解释为什么 verdict 是
-`not_supported`：
+`process_only_supported`，以及为什么它还不是 functional claim：
 
 ```bash
-python3 benchmarks/skill-vs-no-skill/analyze_trials.py --trials-root runs/skill-vs-no-skill-trials-4task
+python3 benchmarks/skill-vs-no-skill/analyze_trials.py --trials-root runs/skill-vs-no-skill-trials-5task
 ```
 
 当前诊断结论：
 
-- baseline mean process score: `14.95 / 35`
-- with-skill mean process score: `33.95 / 35`
-- baseline complete evidence runs: `1 / 20`
-- with-skill complete evidence runs: `20 / 20`
+- baseline mean process score: `7.84 / 35`
+- with-skill mean process score: `33.72 / 35`
+- baseline complete evidence runs: `0 / 25`
+- with-skill complete evidence runs: `25 / 25`
 - hidden pass delta: `0`
 - `tool-call-planner` public-green/hidden-red failures: baseline `5 / 5`, with-skill `5 / 5`
+- `tool-call-planner-v2` hidden pass rate: baseline `5 / 5`, with-skill `5 / 5`
 
-这说明 skill 确实让 agent 更稳定地留下评估证据，但还没有证明能提升 hidden correctness。失败复盘见 [docs/FOUR_TASK_BENCHMARK_REVIEW.md](docs/FOUR_TASK_BENCHMARK_REVIEW.md)。
+这说明 skill 确实让 agent 更稳定地留下评估证据，但还没有证明能提升 hidden correctness。完整记录见 [benchmarks/skill-vs-no-skill/RESULTS.md](benchmarks/skill-vs-no-skill/RESULTS.md)。
 
-### 下一轮 benchmark 修订
+### 从失败回流到 benchmark
 
-当前脚本已经加入 `tool-call-planner-v2`。它把上一轮稳定出现的
+当前五任务 suite 已经包含 `tool-call-planner-v2`。它把上一轮稳定出现的
 `tool-call-planner` hidden miss 回流成一个 agent 可见的公开契约：当
 `intent` 没有任何 matching tool 时，planner 必须返回
 `missing: ["tool"]` 的 clarification。
 
-这不是新的正向证据。它只是把失败变成下一轮更强的 benchmark。下一轮默认
-suite 是 5 个 task family，5 个 paired trials 需要 50 个独立 agent runs。
+五任务结果显示，`tool-call-planner-v2` 在 baseline 和 with-skill 条件下都通过 hidden tests。这证明了 benchmark loop 本身有价值：hidden miss 可以回流成 visible contract。但它也说明这一步不是 skill-specific functional lift，因为两边都能学会新契约。
 
 ## Repo 里有什么
 
@@ -93,7 +94,7 @@ benchmarks/skill-vs-no-skill/
   hidden_tests/                     # 不给 agent 看的隐藏测试
   FIVE_TASK_RUN_PLAN.md             # 五任务 run/evaluate/rerun 执行计划
   assess_trials.py                  # 按固定门槛判断 skill 证据强度
-  analyze_trials.py                 # 解释 not_supported / process leakage / hidden failure pattern
+  analyze_trials.py                 # 解释 verdict / process evidence / hidden failure pattern
   prepare_suite.py                  # 生成多任务 A/B run 目录
   trial_status.py                   # 跟踪多轮 agent run 是否完成/评分
   score_suite.py                    # 聚合多任务分数
@@ -214,10 +215,10 @@ EDD Skill 试图把这些流程固定下来：
 - 已完成：一个 Codex skill、五个 task family、hidden tests、suite scorer、trial scorer、benchmark integrity check、trial assessment gate。
 - 已补充：trial diagnostics，用来解释 baseline artifact leakage 和 public-green/hidden-red failure pattern。
 - 已新增：`tool-call-planner-v2`，把已评分的 hidden miss 回流成 visible benchmark contract。
-- 已验证：5 轮 paired trials，覆盖 4 个 task family，40 个独立 worker runs。
-- 已验证：当前 benchmark integrity check 覆盖 5 个 task family，包含尚未正式跑 paired trials 的 `tool-call-planner-v2`。
+- 已验证：5 轮 paired trials，覆盖 5 个 task family，50 个独立 worker runs。
+- 已验证：当前 benchmark integrity check 覆盖 5 个 task family，且 `tool-call-planner-v2` 已纳入正式 paired trials。
 - 已发现：`tool-call-planner` 成功增加 hidden functional 区分度，但 baseline 和 with-skill 都没有通过这类 hidden tests。
-- 已判定：`assess_trials.py` 在默认门槛下给出 `not_supported`。当前 skill 没有证明 hidden functional uplift，也没有过 process-effect gate。
-- 未完成：五任务 paired trials、跨模型对比、成本/耗时统计、检查 baseline 自发产生 EDD-like artifacts 的原因。
+- 已判定：`assess_trials.py` 在默认门槛下给出 `process_only_supported`。当前 skill 证明了 process/evidence lift，但没有证明 hidden functional uplift。
+- 未完成：独立 confirmation run、跨模型对比、成本/耗时统计、解释为什么 process lift 没有转化成 hidden functional lift。
 
-下一步最有价值的是跑五任务 paired trials，而不是继续宣传：看 `tool-call-planner-v2` 是否能把上一轮失败转成可见契约收益，再决定 skill 是否需要改，或是否应该承认它只是一套普通提示纪律。
+下一步最有价值的是先定 claim：如果只主张 reproducibility/auditability，就跑独立 confirmation；如果要主张 functional improvement，就做 failure-focused 迭代，一次只改一个变量，然后再跑 paired trials。

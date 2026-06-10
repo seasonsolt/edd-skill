@@ -32,12 +32,13 @@ The key point is narrower and stronger:
 - The repo now has a real Codex skill, not just prose.
 - The benchmark now has five task families and hidden tests. The fifth family is `tool-call-planner-v2`, created after the four-task result was scored.
 - `verify_benchmark.py` proves starter tasks fail and reference implementations pass.
-- The latest 5-trial paired run across all four task families reached the planned benchmark volume: 40 isolated worker runs.
+- The latest 5-trial paired run across all five task families reached the planned benchmark volume: 50 isolated worker runs.
 - `tool-call-planner` added a harder AI-app-like task surface with policy precedence, risk choice, approval, missing arguments, and prompt-injection resistance.
-- `tool-call-planner-v2` converts the repeated no-matching-tool hidden miss into a visible public contract for the next benchmark loop.
+- `tool-call-planner-v2` converts the repeated no-matching-tool hidden miss into a visible public contract and has now been included in a formal paired-trial run.
 - `evidence-answerer` adds a RAG-like deterministic task surface with citations, insufficient evidence, trusted/untrusted sources, conflicting facts, and instruction-like text inside passages.
 - `assess_trials.py` now turns scored trial output into an explicit evidence verdict instead of relying on README interpretation.
-- The harder task exposed hidden functional misses in both conditions: baseline and with-skill each passed 15 / 20 hidden task runs, with both failing all `tool-call-planner` hidden runs.
+- The five-task run exposed the current boundary cleanly: baseline and with-skill each passed 20 / 25 hidden task runs, with both failing all `tool-call-planner` hidden runs.
+- The current fixed verdict is `process_only_supported`: the skill produced stable process/evidence lift without hidden functional uplift.
 
 ## Weak Spots
 
@@ -46,15 +47,15 @@ The key point is narrower and stronger:
 - The hidden-failure-to-regression workflow is still mostly manual. `tool-call-planner-v2` proves one manual conversion, but there is no reusable converter yet.
 - The artifact checker still keeps backward compatibility with `AI_TDD_REPORT.md`; new runs should prefer `EDD_REPORT.md`.
 - The skill has not improved hidden functional correctness in the current benchmark: functional delta is 0 and hidden pass delta is 0.
-- The current four-task result is `not_supported` under the fixed assessment gate. Although with-skill had a numeric process-score lift, the median process delta was +19.75 against a +20 threshold.
-- Baseline can already produce EDD-like artifacts in some runs. Trial 005 `feature-flags` baseline scored full process credit, which weakens the claim that the skill uniquely causes process discipline.
-- The new `analyze_trials.py` diagnostic makes this explicit: baseline complete evidence is 1 / 20, with-skill complete evidence is 20 / 20, and hidden pass delta is still 0.
-- `tool-call-planner` has a stable public-green/hidden-red failure category in both conditions. That miss has now been converted into `tool-call-planner-v2`.
+- The current five-task result is `process_only_supported` under the fixed assessment gate. Median process delta was +25.8, but median functional delta was 0.
+- In the five-task run, baseline no longer produced complete EDD artifact leakage: baseline complete evidence was 0 / 25 while with-skill complete evidence was 25 / 25.
+- The new `analyze_trials.py` diagnostic makes this explicit: baseline mean process score is 7.84 / 35, with-skill mean process score is 33.72 / 35, and hidden pass delta is still 0.
+- `tool-call-planner` still has a stable public-green/hidden-red failure category in both conditions. `tool-call-planner-v2` passed in both conditions after that miss was converted into a visible contract, which validates the benchmark loop but not a skill-specific functional lift.
 
 ## Next Improvements
 
-1. Treat the four-task `not_supported` verdict as the current truth, not as a messaging problem.
-2. Run 5 paired trials on the current five-task suite, including `tool-call-planner-v2`.
+1. Treat the five-task `process_only_supported` verdict as the current truth, not as a messaging problem.
+2. Decide the claim before rerunning: confirm process/reproducibility with an independent root, or attempt functional uplift with a single changed variable.
 3. Add cost/time metadata to each run's score JSON.
 4. Add a script that converts selected hidden failures into visible regression templates after scoring.
-5. Investigate why baseline runs can produce EDD-like artifacts and whether the benchmark prompt itself is already enough to induce the desired loop. The first diagnostic is now available through `analyze_trials.py`; the next step is to compare prompts and generated artifacts, not just scores.
+5. Investigate why process lift does not convert into hidden functional lift on `tool-call-planner`. The next useful comparison is prompt and artifact analysis, not only aggregate score comparison.

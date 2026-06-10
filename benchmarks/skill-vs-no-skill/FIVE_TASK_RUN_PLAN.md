@@ -89,6 +89,28 @@ Use the fixed assessment verdict first.
 - `functional_regression`: stop and analyze regressions before any rerun.
 - `insufficient_evidence`: fix trial volume or task discovery, then rerun.
 
+## Run 1 Result
+
+- Date: 2026-06-10
+- Runs: 50 / 50 completed and scored.
+- Assessment verdict: `process_only_supported`.
+- Hidden pass delta: 0. Baseline and with-skill both passed 20 / 25 hidden runs.
+- Median functional delta: 0.
+- Median process delta: +25.8.
+- Baseline artifact leakage: 0 / 25 complete evidence runs.
+- With-skill complete evidence: 25 / 25 runs.
+- `tool-call-planner-v2` hidden pass rate: baseline 5 / 5, with-skill 5 / 5.
+
+Interpretation:
+
+- The run supports a process/reproducibility claim.
+- The run does not support a hidden functional correctness claim.
+- `tool-call-planner-v2` validates the failure-to-visible-contract loop, but not
+  a skill-specific functional lift because both conditions solved it.
+- A second run should not repeat the same suite blindly. Either confirm the
+  process-only claim with an independent root, or change exactly one variable
+  before attempting a functional-uplift rerun.
+
 ## Run 2: Confirmation Or Failure-Focused Rerun
 
 If Run 1 supports a claim, prepare an independent confirmation root:

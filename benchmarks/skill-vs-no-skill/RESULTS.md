@@ -2,6 +2,115 @@
 
 Record each A/B run here after scoring.
 
+## Five-Trial Paired Experiment: Five-Task Suite
+
+- Date: 2026-06-10
+- Model: inherited current Codex model for all worker agents
+- Task families: `quote-engine`, `feature-flags`, `tool-call-planner`, `tool-call-planner-v2`, `evidence-answerer`
+- Trials: 5 paired trials, 25 baseline task runs, 25 with-skill task runs
+- Score command: `python3 benchmarks/skill-vs-no-skill/score_trials.py --trials-root runs/skill-vs-no-skill-trials-5task --expected-trial-count 5`
+- Assessment command: `python3 benchmarks/skill-vs-no-skill/assess_trials.py --trials-root runs/skill-vs-no-skill-trials-5task --json-output runs/skill-vs-no-skill-trials-5task/assessment.json`
+- Diagnostic command: `python3 benchmarks/skill-vs-no-skill/analyze_trials.py --trials-root runs/skill-vs-no-skill-trials-5task --json-output runs/skill-vs-no-skill-trials-5task/diagnostics.json`
+- Assessment verdict: `process_only_supported`
+
+### Aggregate Scores
+
+| Metric | Baseline | With EDD Skill | Delta |
+| --- | ---: | ---: | ---: |
+| Mean total score | 62.84 | 88.72 | +25.88 |
+| Median total score | 62.8 | 88.8 | +25.8 |
+| Worst trial mean score | 59.8 | 88.6 | +28.8 by condition |
+| Mean functional delta | - | - | 0 |
+| Median functional delta | - | - | 0 |
+| Mean process delta | - | - | +25.88 |
+| Median process delta | - | - | +25.8 |
+| Hidden pass rate | 20 / 25 | 20 / 25 | 0 |
+| `tool-call-planner` hidden pass rate | 0 / 5 | 0 / 5 | 0 |
+| `tool-call-planner-v2` hidden pass rate | 5 / 5 | 5 / 5 | 0 |
+
+### Trial Deltas
+
+| Trial | Baseline mean | With-skill mean | Score delta | Process delta | Functional delta | Hidden pass |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| trial-001 | 63.0 | 88.8 | +25.8 | +25.8 | 0 | both 80% |
+| trial-002 | 62.6 | 88.8 | +26.2 | +26.2 | 0 | both 80% |
+| trial-003 | 59.8 | 88.6 | +28.8 | +28.8 | 0 | both 80% |
+| trial-004 | 66.0 | 88.8 | +22.8 | +22.8 | 0 | both 80% |
+| trial-005 | 62.8 | 88.6 | +25.8 | +25.8 | 0 | both 80% |
+
+### Per-Task Pattern
+
+| Task | Baseline hidden | With-skill hidden | Mean process delta | Functional delta |
+| --- | ---: | ---: | ---: | ---: |
+| `quote-engine` | 5 / 5 | 5 / 5 | +26.2 | 0 |
+| `feature-flags` | 5 / 5 | 5 / 5 | +23.8 | 0 |
+| `tool-call-planner` | 0 / 5 | 0 / 5 | +21.4 | 0 |
+| `tool-call-planner-v2` | 5 / 5 | 5 / 5 | +32.6 | 0 |
+| `evidence-answerer` | 5 / 5 | 5 / 5 | +25.4 | 0 |
+
+### Assessment Gate
+
+`assess_trials.py` default criteria:
+
+- `min_trials`: 5
+- `min_task_families`: 4
+- `min_process_delta`: 20
+
+Observed:
+
+- `credible_volume`: true
+- `median_functional_delta`: 0
+- `hidden_pass_delta`: 0
+- `median_process_delta`: +25.8
+- `process_win_rate`: 100%
+- `functional_effect`: false
+- `process_effect`: true
+- `functional_regression`: false
+
+Verdict: `process_only_supported`.
+
+### Interpretation
+
+- This is a credible process result, not a functional correctness result.
+- EDD Skill reliably changed the agent coding loop: with-skill runs left complete evidence in 25 / 25 runs, versus 0 / 25 baseline runs.
+- The hidden functional result did not move. Baseline and with-skill both passed 20 / 25 hidden task runs.
+- `tool-call-planner-v2` shows that converting a known hidden miss into a visible public contract made the task solvable in both conditions. That is useful benchmark-loop evidence, but it is not a skill-specific functional lift.
+- `tool-call-planner` remains a stable public-green/hidden-red task in both conditions, failing the same `no_matching_tool_clarification_boundary` category in all 10 runs.
+- The public claim should be limited to process reliability and auditability until a future benchmark shows hidden functional delta or hidden pass delta.
+
+### Failure Review Diagnostic
+
+Command:
+
+```bash
+python3 benchmarks/skill-vs-no-skill/analyze_trials.py --trials-root runs/skill-vs-no-skill-trials-5task --json-output runs/skill-vs-no-skill-trials-5task/diagnostics.json
+```
+
+Diagnostic output:
+
+| Diagnostic | Baseline | With EDD Skill |
+| --- | ---: | ---: |
+| Mean process score | 7.84 / 35 | 33.72 / 35 |
+| Complete evidence runs | 0 / 25 | 25 / 25 |
+| High-process runs | 0 / 25 | 25 / 25 |
+| Hidden passed | 20 / 25 | 20 / 25 |
+
+Baseline artifact leakage:
+
+- No complete baseline EDD artifact leakage was observed in the five-task run.
+
+Hidden failure pattern:
+
+- `tool-call-planner` is still public-green/hidden-red in all 10 runs.
+- The failure category is stable across both conditions: `no_matching_tool_clarification_boundary`.
+- `tool-call-planner-v2` passed hidden tests in both conditions after this failure mode was converted into a visible public contract.
+
+Next benchmark loop:
+
+- Do not rerun the same suite expecting a different functional result.
+- Choose one variable to change before the next run: skill instructions, task contract, process scoring, model/settings, or benchmark task mix.
+- If the claim remains process-only, run an independent confirmation root. If the desired claim is functional lift, first strengthen how the skill turns visible eval contracts into implementation behavior.
+
 ## Five-Trial Paired Experiment: Four-Task Suite
 
 - Date: 2026-06-10
@@ -219,20 +328,21 @@ Interpretation:
 ## Benchmark Revision: `tool-call-planner-v2`
 
 - Date: 2026-06-10
-- Status: added to the default suite, not yet included in a completed paired-trial result.
+- Status: added to the default suite and included in the five-task paired-trial result above.
 - Purpose: convert the repeated `tool-call-planner` hidden miss into a visible public contract for the next loop.
 - New visible behavior: if no tool capability matches `request["intent"]`, return a clarification with `tool: None`, `missing: ["tool"]`, and `reason: "no_matching_tool"`.
 - Smoke command: `python3 benchmarks/skill-vs-no-skill/score_suite.py --runs-root runs/skill-vs-no-skill-suite-v2-smoke`
 - Smoke result: default suite recognizes 5 task families and starter paired copies all score 0.
 - Trial status command: `python3 benchmarks/skill-vs-no-skill/trial_status.py --trials-root runs/skill-vs-no-skill-trials-5task --expected-trial-count 5`
 
-This revision does not change the four-task verdict above. It defines the next
-benchmark loop. Five paired trials over the current suite now require 50 agent
-runs.
+The five-task result shows that `tool-call-planner-v2` passed hidden tests in
+both conditions. That validates the failure-to-visible-contract loop, but it
+does not show a skill-specific hidden functional uplift.
 
 ## Credibility Status
 
-- Current evidence: 5 paired trials across `quote-engine`, `feature-flags`, `tool-call-planner`, and `evidence-answerer`.
-- Benchmark coverage: five task families with public tests, hidden tests, reference implementations, and an integrity check. The fifth task, `tool-call-planner-v2`, has not yet been included in a formal paired-trial result.
-- Claim strength: `not_supported` under the current fixed assessment gate. The skill has not shown hidden functional uplift, and process uplift did not meet the default threshold.
-- Next threshold: run 5 paired trials on the five-task suite and compare hidden functional delta, process delta, and baseline artifact leakage again.
+- Current evidence: 5 paired trials across five task families, 50 isolated worker runs, 50 scored run directories.
+- Benchmark coverage: five task families with public tests, hidden tests, reference implementations, and an integrity check.
+- Claim strength: `process_only_supported` under the current fixed assessment gate. The skill has not shown hidden functional uplift, but it did show a stable process/evidence lift.
+- Current public claim: EDD Skill improves auditability and reproducibility of the agent coding loop in this benchmark. It does not yet prove better hidden correctness.
+- Next threshold: decide whether to confirm the process-only claim with an independent run root or change exactly one variable before attempting a functional-uplift rerun.
