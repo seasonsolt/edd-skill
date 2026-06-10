@@ -23,24 +23,25 @@ EDD Skill 约束的是这几件事：
 
 它的目标不是让 agent 写更多文件，而是让 agent 的结果更可复现、更容易审计，也更适合长期迭代。
 
-## 已经测到的提升
+## 最新 benchmark 结论
 
-当前最可信的一轮正式实验是 5 个 paired trials，覆盖三个 task family：`quote-engine`、`feature-flags`、`tool-call-planner`。每个 trial 都有 baseline 与 with-skill 两个条件，hidden tests 和 scorer 都不暴露给 agent。
+当前最可信的一轮正式实验是 5 个 paired trials，覆盖四个 task family：`quote-engine`、`feature-flags`、`tool-call-planner`、`evidence-answerer`。每个 trial 都有 baseline 与 with-skill 两个条件，hidden tests 和 scorer 都不暴露给 agent。
 
 | 指标 | baseline | with EDD Skill | delta |
 | --- | ---: | ---: | ---: |
-| median total score | 52.67 / 100 | 82.33 / 100 | +29.66 |
-| mean total score | 53.8 / 100 | 82.4 / 100 | +28.6 |
+| median total score | 66.5 / 100 | 86.5 / 100 | +19.75 |
+| mean total score | 67.45 / 100 | 86.45 / 100 | +19.0 |
 | median functional delta | - | - | 0 |
-| median process delta | - | - | +29.67 |
-| hidden pass rate | 10 / 15 | 10 / 15 | 0 |
+| median process delta | - | - | +19.75 |
+| hidden pass rate | 15 / 20 | 15 / 20 | 0 |
 | `tool-call-planner` hidden pass rate | 0 / 5 | 0 / 5 | 0 |
+| `assess_trials.py` verdict | - | - | `not_supported` |
 
-客观结论更克制：EDD Skill 在这组任务上仍没有提升 hidden functional correctness。新增的 `tool-call-planner` 成功暴露了隐藏规划边界，但 baseline 和 with-skill 都没过这一类 hidden tests。它稳定提升的是 agent coding loop 的可审计性：with-skill runs 持续留下 eval contract、red/green evidence、regression tests 和 `EDD_REPORT.md`。
+客观结论更严格：在四任务 benchmark 上，EDD Skill 没有提升 hidden functional correctness。`quote-engine`、`feature-flags`、`evidence-answerer` 两边都通过 hidden tests；`tool-call-planner` 两边都失败。with-skill 的过程分更高，但 median process delta 是 `+19.75`，低于预先设定的 `+20` gate，所以固定判定脚本给出 `not_supported`。
 
-这已经能证明一个实际价值：EDD Skill 让 agent coding loop 更可复现、更容易复盘，也更适合把失败回流成 regression。但它不是功能正确性的自动保证。
+这不是坏结果，反而是 benchmark loop 应该给出的结果：它说明当前 skill 还不能被认为有效。它可能仍然有过程提醒价值，但在这轮更严格的证据门槛下，没有证明出可宣称的效果。
 
-下一步不是假设它有效，而是扩大 benchmark loop：新增 task family、用判定脚本给出 `functional_supported` / `process_only_supported` / `not_supported` / `insufficient_evidence`，再看结果是否仍然站得住。
+下一步应该把这次失败当作输入：分析 baseline 为什么也能自然地产生高过程证据、把 `tool-call-planner` hidden miss 转成 visible regression/task v2，再跑下一轮。不要为了让 skill 看起来有效而调低 gate。
 
 ## Repo 里有什么
 
@@ -151,7 +152,7 @@ python3 benchmarks/skill-vs-no-skill/assess_trials.py --trials-root runs/skill-v
 
 把这件事写进 prompt 很容易失效。Agent 忙着实现时，经常会跳过评估契约、补测试，或者最后只说自己跑过了。
 
-EDD Skill 的价值在于把流程固定下来：
+EDD Skill 试图把这些流程固定下来：
 
 - 项目从哪些 eval 开始。
 - 什么时候该写 test。
@@ -167,10 +168,9 @@ EDD Skill 的价值在于把流程固定下来：
 这个 repo 还在早期。
 
 - 已完成：一个 Codex skill、四个 task family、hidden tests、suite scorer、trial scorer、benchmark integrity check、trial assessment gate。
-- 已验证：5 轮 paired trials，覆盖 3 个旧 task family，with-skill median total score +29.66，差异来自过程证据。
-- 已新增：`evidence-answerer`，覆盖证据引用、冲突证据、不可信来源和文本注入；它已通过 integrity check，但还没有正式 paired trial 结果。
+- 已验证：5 轮 paired trials，覆盖 4 个 task family，40 个独立 worker runs。
 - 已发现：`tool-call-planner` 成功增加 hidden functional 区分度，但 baseline 和 with-skill 都没有通过这类 hidden tests。
-- 未证明：当前 benchmark 没有显示 hidden functional uplift；baseline 和 with-skill 都是 10/15 hidden pass。
-- 未完成：跑四任务 5+ 轮 paired trials、把 `tool-call-planner` hidden miss 回流成 visible regression/task v2、跨模型对比、成本/耗时统计。
+- 已判定：`assess_trials.py` 在默认门槛下给出 `not_supported`。当前 skill 没有证明 hidden functional uplift，也没有过 process-effect gate。
+- 未完成：把 `tool-call-planner` hidden miss 回流成 visible regression/task v2、跨模型对比、成本/耗时统计、检查 baseline 自发产生 EDD-like artifacts 的原因。
 
-下一步最有价值的是跑四任务 benchmark loop：`5 trials * 4 task families * 2 conditions = 40 runs`，然后用 `assess_trials.py` 输出证据等级。它完全可能给出 `process_only_supported`、`not_supported` 或 `insufficient_evidence`，这比预设 skill 有效更重要。
+下一步最有价值的是做失败复盘，而不是继续宣传：先解释为什么 baseline process score 已经偏高，再决定 skill 是否需要改，或是否应该承认它只是一套普通提示纪律。

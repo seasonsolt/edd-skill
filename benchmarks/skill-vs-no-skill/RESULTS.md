@@ -2,15 +2,76 @@
 
 Record each A/B run here after scoring.
 
-## Next Benchmark Loop: Four-Task Suite
+## Five-Trial Paired Experiment: Four-Task Suite
 
-- Added: `evidence-answerer`
-- Coverage: evidence-grounded answering, citations, insufficient evidence, conflicting trusted facts, untrusted sources, and prompt-injection-like passage text.
-- Integrity status: `python3 benchmarks/skill-vs-no-skill/verify_benchmark.py` passes for all four task families.
-- Planned run size: 5 paired trials, 20 baseline task runs, 20 with-skill task runs.
-- Assessment command: `python3 benchmarks/skill-vs-no-skill/assess_trials.py --trials-root runs/skill-vs-no-skill-trials`
+- Date: 2026-06-10
+- Model: inherited current Codex model for all worker agents
+- Task families: `quote-engine`, `feature-flags`, `tool-call-planner`, `evidence-answerer`
+- Trials: 5 paired trials, 20 baseline task runs, 20 with-skill task runs
+- Score command: `python3 benchmarks/skill-vs-no-skill/score_trials.py --trials-root runs/skill-vs-no-skill-trials-4task --expected-trial-count 5`
+- Assessment command: `python3 benchmarks/skill-vs-no-skill/assess_trials.py --trials-root runs/skill-vs-no-skill-trials-4task`
+- Assessment verdict: `not_supported`
 
-This loop should be allowed to falsify the skill. A valid outcome can be `process_only_supported`, `not_supported`, `functional_regression`, or `insufficient_evidence`.
+### Aggregate Scores
+
+| Metric | Baseline | With EDD Skill | Delta |
+| --- | ---: | ---: | ---: |
+| Mean total score | 67.45 | 86.45 | +19.0 |
+| Median total score | 66.5 | 86.5 | +19.75 |
+| Worst trial mean score | 66.25 | 86.0 | +19.75 by condition |
+| Mean functional delta | - | - | 0 |
+| Median functional delta | - | - | 0 |
+| Mean process delta | - | - | +19.0 |
+| Median process delta | - | - | +19.75 |
+| Hidden pass rate | 15 / 20 | 15 / 20 | 0 |
+| `tool-call-planner` hidden pass rate | 0 / 5 | 0 / 5 | 0 |
+
+### Trial Deltas
+
+| Trial | Baseline mean | With-skill mean | Score delta | Process delta | Functional delta | Hidden pass |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| trial-001 | 66.25 | 86.0 | +19.75 | +19.75 | 0 | both 75% |
+| trial-002 | 66.5 | 86.5 | +20.0 | +20.0 | 0 | both 75% |
+| trial-003 | 67.0 | 86.75 | +19.75 | +19.75 | 0 | both 75% |
+| trial-004 | 66.5 | 86.75 | +20.25 | +20.25 | 0 | both 75% |
+| trial-005 | 71.0 | 86.25 | +15.25 | +15.25 | 0 | both 75% |
+
+### Per-Task Pattern
+
+| Task | Baseline hidden | With-skill hidden | Mean score delta | Mean process delta | Functional delta |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `quote-engine` | 5 / 5 | 5 / 5 | +20.6 | +20.6 | 0 |
+| `feature-flags` | 5 / 5 | 5 / 5 | +15.6 | +15.6 | 0 |
+| `tool-call-planner` | 0 / 5 | 0 / 5 | +20.2 | +20.2 | 0 |
+| `evidence-answerer` | 5 / 5 | 5 / 5 | +19.6 | +19.6 | 0 |
+
+### Assessment Gate
+
+`assess_trials.py` default criteria:
+
+- `min_trials`: 5
+- `min_task_families`: 4
+- `min_process_delta`: 20
+
+Observed:
+
+- `credible_volume`: true
+- `median_functional_delta`: 0
+- `hidden_pass_delta`: 0
+- `median_process_delta`: +19.75
+- `process_win_rate`: 100%
+- `functional_effect`: false
+- `process_effect`: false
+
+Verdict: `not_supported`.
+
+### Interpretation
+
+- This is a useful negative result. The four-task suite reached the planned benchmark volume and did not support an effectiveness claim for EDD Skill.
+- There is still a numeric process-score lift, but it misses the default `+20` process gate by 0.25 points.
+- The functional delta remains 0. Baseline and with-skill both passed all `quote-engine`, `feature-flags`, and `evidence-answerer` hidden runs, and both failed every `tool-call-planner` hidden run.
+- Trial 005 shows an important confound: a baseline `feature-flags` run produced EDD-like artifacts and scored full process credit. That suggests the skill may not be uniquely responsible for process discipline under this prompt/model setup.
+- The next loop should analyze why `tool-call-planner` remains hard and why baseline can already produce high process evidence, instead of lowering thresholds after seeing the result.
 
 ## Five-Trial Paired Experiment: Three-Task Suite
 
@@ -125,7 +186,7 @@ This loop should be allowed to falsify the skill. A valid outcome can be `proces
 
 ## Credibility Status
 
-- Current evidence: 5 paired trials across `quote-engine`, `feature-flags`, and `tool-call-planner`.
+- Current evidence: 5 paired trials across `quote-engine`, `feature-flags`, `tool-call-planner`, and `evidence-answerer`.
 - Benchmark coverage: four task families with public tests, hidden tests, reference implementations, and an integrity check.
-- Claim strength: credible for process/auditability improvement, not credible yet for functional correctness uplift.
-- Next threshold: run the four-task suite for 5+ paired trials and require `assess_trials.py` to report the evidence level.
+- Claim strength: `not_supported` under the current fixed assessment gate. The skill has not shown hidden functional uplift, and process uplift did not meet the default threshold.
+- Next threshold: convert `tool-call-planner` misses into visible regression/task v2 and explain baseline EDD-like artifact production before rerunning.

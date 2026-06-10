@@ -32,11 +32,11 @@ The key point is narrower and stronger:
 - The repo now has a real Codex skill, not just prose.
 - The benchmark has four task families and hidden tests.
 - `verify_benchmark.py` proves starter tasks fail and reference implementations pass.
-- The latest 5-trial paired run across all three task families showed a stable process-score lift: median total delta +29.66, mean total delta +28.6.
+- The latest 5-trial paired run across all four task families reached the planned benchmark volume: 40 isolated worker runs.
 - `tool-call-planner` added a harder AI-app-like task surface with policy precedence, risk choice, approval, missing arguments, and prompt-injection resistance.
 - `evidence-answerer` adds a RAG-like deterministic task surface with citations, insufficient evidence, trusted/untrusted sources, conflicting facts, and instruction-like text inside passages.
 - `assess_trials.py` now turns scored trial output into an explicit evidence verdict instead of relying on README interpretation.
-- The harder task exposed hidden functional misses in both conditions: baseline and with-skill each passed 10 / 15 hidden task runs.
+- The harder task exposed hidden functional misses in both conditions: baseline and with-skill each passed 15 / 20 hidden task runs, with both failing all `tool-call-planner` hidden runs.
 
 ## Weak Spots
 
@@ -44,13 +44,14 @@ The key point is narrower and stronger:
 - The benchmark measures process artifacts well, but it does not yet track cost, elapsed time, token use, or tool-call count.
 - The hidden-failure-to-regression workflow is described but not automated, and `tool-call-planner` now gives concrete failures to feed into it.
 - The artifact checker still keeps backward compatibility with `AI_TDD_REPORT.md`; new runs should prefer `EDD_REPORT.md`.
-- The skill has not yet improved hidden functional correctness; its demonstrated value remains process evidence, auditability, and reproducibility.
-- The new four-task suite has passed integrity checks, but it has not yet been run as a full paired trial set.
+- The skill has not improved hidden functional correctness in the current benchmark: functional delta is 0 and hidden pass delta is 0.
+- The current four-task result is `not_supported` under the fixed assessment gate. Although with-skill had a numeric process-score lift, the median process delta was +19.75 against a +20 threshold.
+- Baseline can already produce EDD-like artifacts in some runs. Trial 005 `feature-flags` baseline scored full process credit, which weakens the claim that the skill uniquely causes process discipline.
 
 ## Next Improvements
 
-1. Run 5 paired trials on the four-task suite and record the `assess_trials.py` verdict.
+1. Treat the four-task `not_supported` verdict as the current truth, not as a messaging problem.
 2. Create `tool-call-planner` v2 by converting scored hidden misses into visible regressions without leaking the original hidden tests.
 3. Add cost/time metadata to each run's score JSON.
 4. Add a script that converts selected hidden failures into visible regression templates after scoring.
-5. Consider adding an alias skill or renamed skill folder for `$edd-skill` once compatibility is less important.
+5. Investigate why baseline runs can produce EDD-like artifacts and whether the benchmark prompt itself is already enough to induce the desired loop.
