@@ -63,6 +63,16 @@ python3 benchmarks/skill-vs-no-skill/analyze_trials.py --trials-root runs/skill-
 
 这说明 skill 确实让 agent 更稳定地留下评估证据，但还没有证明能提升 hidden correctness。失败复盘见 [docs/FOUR_TASK_BENCHMARK_REVIEW.md](docs/FOUR_TASK_BENCHMARK_REVIEW.md)。
 
+### 下一轮 benchmark 修订
+
+当前脚本已经加入 `tool-call-planner-v2`。它把上一轮稳定出现的
+`tool-call-planner` hidden miss 回流成一个 agent 可见的公开契约：当
+`intent` 没有任何 matching tool 时，planner 必须返回
+`missing: ["tool"]` 的 clarification。
+
+这不是新的正向证据。它只是把失败变成下一轮更强的 benchmark。下一轮默认
+suite 是 5 个 task family，5 个 paired trials 需要 50 个独立 agent runs。
+
 ## Repo 里有什么
 
 ```text
@@ -78,6 +88,7 @@ benchmarks/skill-vs-no-skill/
   task/                             # quote-engine starter task
   tasks/feature-flags/              # feature-flags starter task
   tasks/tool-call-planner/           # tool-call planning starter task
+  tasks/tool-call-planner-v2/        # hidden miss 回流后的 visible-regression task
   tasks/evidence-answerer/           # evidence-grounded answer starter task
   hidden_tests/                     # 不给 agent 看的隐藏测试
   assess_trials.py                  # 按固定门槛判断 skill 证据强度
@@ -108,6 +119,7 @@ python3 benchmarks/skill-vs-no-skill/verify_benchmark.py
 quote-engine: starter 0, reference public+hidden pass
 feature-flags: starter 0, reference public+hidden pass
 tool-call-planner: starter 0, reference public+hidden pass
+tool-call-planner-v2: starter 0, reference public+hidden pass
 evidence-answerer: starter 0, reference public+hidden pass
 ```
 
@@ -132,6 +144,8 @@ runs/skill-vs-no-skill-suite/feature-flags/baseline
 runs/skill-vs-no-skill-suite/feature-flags/with-skill
 runs/skill-vs-no-skill-suite/tool-call-planner/baseline
 runs/skill-vs-no-skill-suite/tool-call-planner/with-skill
+runs/skill-vs-no-skill-suite/tool-call-planner-v2/baseline
+runs/skill-vs-no-skill-suite/tool-call-planner-v2/with-skill
 runs/skill-vs-no-skill-suite/evidence-answerer/baseline
 runs/skill-vs-no-skill-suite/evidence-answerer/with-skill
 ```
@@ -194,11 +208,13 @@ EDD Skill 试图把这些流程固定下来：
 
 这个 repo 还在早期。
 
-- 已完成：一个 Codex skill、四个 task family、hidden tests、suite scorer、trial scorer、benchmark integrity check、trial assessment gate。
+- 已完成：一个 Codex skill、五个 task family、hidden tests、suite scorer、trial scorer、benchmark integrity check、trial assessment gate。
 - 已补充：trial diagnostics，用来解释 baseline artifact leakage 和 public-green/hidden-red failure pattern。
+- 已新增：`tool-call-planner-v2`，把已评分的 hidden miss 回流成 visible benchmark contract。
 - 已验证：5 轮 paired trials，覆盖 4 个 task family，40 个独立 worker runs。
+- 已验证：当前 benchmark integrity check 覆盖 5 个 task family，包含尚未正式跑 paired trials 的 `tool-call-planner-v2`。
 - 已发现：`tool-call-planner` 成功增加 hidden functional 区分度，但 baseline 和 with-skill 都没有通过这类 hidden tests。
 - 已判定：`assess_trials.py` 在默认门槛下给出 `not_supported`。当前 skill 没有证明 hidden functional uplift，也没有过 process-effect gate。
-- 未完成：把 `tool-call-planner` hidden miss 回流成 visible regression/task v2、跨模型对比、成本/耗时统计、检查 baseline 自发产生 EDD-like artifacts 的原因。
+- 未完成：五任务 paired trials、跨模型对比、成本/耗时统计、检查 baseline 自发产生 EDD-like artifacts 的原因。
 
-下一步最有价值的是做失败复盘，而不是继续宣传：先解释为什么 baseline process score 已经偏高，再决定 skill 是否需要改，或是否应该承认它只是一套普通提示纪律。
+下一步最有价值的是跑五任务 paired trials，而不是继续宣传：看 `tool-call-planner-v2` 是否能把上一轮失败转成可见契约收益，再决定 skill 是否需要改，或是否应该承认它只是一套普通提示纪律。

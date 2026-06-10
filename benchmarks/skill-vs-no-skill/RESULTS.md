@@ -210,15 +210,28 @@ Interpretation:
 ## Benchmark Integrity
 
 - Date: 2026-06-10
-- Task families: `quote-engine`, `feature-flags`, `tool-call-planner`, `evidence-answerer`
+- Task families: `quote-engine`, `feature-flags`, `tool-call-planner`, `tool-call-planner-v2`, `evidence-answerer`
 - Command: `python3 benchmarks/skill-vs-no-skill/verify_benchmark.py`
 - Result: passed
-- Starter score: 0 for all four task families.
-- Reference implementation: public and hidden tests pass for all four task families.
+- Starter score: 0 for all five task families.
+- Reference implementation: public and hidden tests pass for all five task families.
+
+## Benchmark Revision: `tool-call-planner-v2`
+
+- Date: 2026-06-10
+- Status: added to the default suite, not yet included in a completed paired-trial result.
+- Purpose: convert the repeated `tool-call-planner` hidden miss into a visible public contract for the next loop.
+- New visible behavior: if no tool capability matches `request["intent"]`, return a clarification with `tool: None`, `missing: ["tool"]`, and `reason: "no_matching_tool"`.
+- Smoke command: `python3 benchmarks/skill-vs-no-skill/score_suite.py --runs-root runs/skill-vs-no-skill-suite-v2-smoke`
+- Smoke result: default suite recognizes 5 task families and starter paired copies all score 0.
+
+This revision does not change the four-task verdict above. It defines the next
+benchmark loop. Five paired trials over the current suite now require 50 agent
+runs.
 
 ## Credibility Status
 
 - Current evidence: 5 paired trials across `quote-engine`, `feature-flags`, `tool-call-planner`, and `evidence-answerer`.
-- Benchmark coverage: four task families with public tests, hidden tests, reference implementations, and an integrity check.
+- Benchmark coverage: five task families with public tests, hidden tests, reference implementations, and an integrity check. The fifth task, `tool-call-planner-v2`, has not yet been included in a formal paired-trial result.
 - Claim strength: `not_supported` under the current fixed assessment gate. The skill has not shown hidden functional uplift, and process uplift did not meet the default threshold.
-- Next threshold: convert `tool-call-planner` misses into visible regression/task v2 and explain baseline EDD-like artifact production before rerunning.
+- Next threshold: run 5 paired trials on the five-task suite and compare hidden functional delta, process delta, and baseline artifact leakage again.

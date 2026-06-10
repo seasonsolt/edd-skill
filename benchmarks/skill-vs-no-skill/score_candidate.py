@@ -69,6 +69,22 @@ TASKS = {
     },
 }
 
+TOOL_CALL_PLANNER_V2_EDGE_KEYWORDS = {
+    name: list(terms) for name, terms in TASKS["tool-call-planner"]["edge_keywords"].items()
+}
+TOOL_CALL_PLANNER_V2_EDGE_KEYWORDS["missing"] = [
+    *TOOL_CALL_PLANNER_V2_EDGE_KEYWORDS["missing"],
+    "no_matching_tool",
+    '"tool"',
+]
+
+TASKS["tool-call-planner-v2"] = {
+    **TASKS["tool-call-planner"],
+    "starter_root": ROOT / "tasks" / "tool-call-planner-v2",
+    "starter_public_test": ROOT / "tasks" / "tool-call-planner-v2" / "tests" / "test_public_planner.py",
+    "edge_keywords": TOOL_CALL_PLANNER_V2_EDGE_KEYWORDS,
+}
+
 
 def count_test_defs(text: str) -> int:
     return len(re.findall(r"\bdef\s+test_", text))

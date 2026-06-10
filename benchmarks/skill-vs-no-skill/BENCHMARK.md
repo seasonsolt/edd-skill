@@ -24,6 +24,7 @@ This creates paired runs under:
 - `runs/skill-vs-no-skill-suite/quote-engine/`
 - `runs/skill-vs-no-skill-suite/feature-flags/`
 - `runs/skill-vs-no-skill-suite/tool-call-planner/`
+- `runs/skill-vs-no-skill-suite/tool-call-planner-v2/`
 - `runs/skill-vs-no-skill-suite/evidence-answerer/`
 
 Each task has:
@@ -80,10 +81,10 @@ python3 benchmarks/skill-vs-no-skill/score_trials.py --trials-root runs/skill-vs
 
 This writes `runs/skill-vs-no-skill-trials/trials-summary.json`.
 
-Five trials across the current four task families require 40 independent agent runs:
+Five trials across the current five task families require 50 independent agent runs:
 
 ```text
-5 trials * 4 task families * 2 conditions = 40 runs
+5 trials * 5 task families * 2 conditions = 50 runs
 ```
 
 After scoring, run the fixed assessment gate:
@@ -113,6 +114,10 @@ This checks two properties for every task family:
 
 - Starter task scores `0` and fails public/hidden tests.
 - A reference implementation passes public/hidden tests.
+
+The current suite includes a v2 task, `tool-call-planner-v2`, that converts a
+previous hidden miss into an agent-visible public contract. Historical
+four-task results remain comparable only to the pre-v2 suite.
 
 ## Single-Task Scoring
 

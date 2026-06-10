@@ -425,6 +425,12 @@ def answer_question(question: str, passages: list[dict]) -> dict:
     },
 }
 
+TASKS["tool-call-planner-v2"] = {
+    "starter": ROOT / "tasks" / "tool-call-planner-v2",
+    "implementation": Path("tool_call_planner/planner.py"),
+    "reference": TASKS["tool-call-planner"]["reference"],
+}
+
 
 def score(task: str, candidate: Path) -> dict:
     completed = subprocess.run(

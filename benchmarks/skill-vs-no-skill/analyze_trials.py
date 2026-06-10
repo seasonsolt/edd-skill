@@ -52,7 +52,7 @@ def failure_category(task: str, failure: str, score: dict[str, Any]) -> str:
     stderr = score["commands"]["hidden"].get("stderr", "")
     if failure == "pass":
         return "pass"
-    if task == "tool-call-planner" and "no_matching_tool" in stderr:
+    if task in {"tool-call-planner", "tool-call-planner-v2"} and "no_matching_tool" in stderr:
         return "no_matching_tool_clarification_boundary"
     return failure
 
