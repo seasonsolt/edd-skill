@@ -1,0 +1,33 @@
+{
+  "model_tiers": [
+    {
+      "tier": "sota",
+      "label": "gpt5.5",
+      "model_id": "gpt-5.5",
+      "purpose": "Measure whether EDD still improves verification quality when the model is already strong."
+    },
+    {
+      "tier": "economical",
+      "label": "gpt5.4mini",
+      "model_id": "gpt-5.4-mini",
+      "purpose": "Measure whether EDD gives a cheaper model enough verification structure to become reliable."
+    }
+  ],
+  "conditions": [
+    {
+      "condition": "baseline",
+      "prompt_prefix": ""
+    },
+    {
+      "condition": "with-skill",
+      "prompt_prefix": "Use $eval-driven-ai-tdd.\n\n"
+    }
+  ],
+  "minimum_trials": 5,
+  "minimum_task_families": 2,
+  "primary_deltas": [
+    "sota_with_skill_minus_sota_baseline",
+    "economical_with_skill_minus_economical_baseline",
+    "skill_leverage_gap"
+  ]
+}
