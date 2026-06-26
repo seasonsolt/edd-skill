@@ -10,13 +10,29 @@ from pathlib import Path
 from typing import Any
 
 
-REQUIRED_RUN_FILES = (
+BASE_REQUIRED_RUN_FILES = (
     "RUN_METADATA.json",
     "PROMPT.md",
     "TASK.md",
-    "tool_call_planner/planner.py",
-    "tests/test_public_planner.py",
 )
+TASK_REQUIRED_FILES = {
+    "agent-policy-evolution": (
+        "tool_call_planner/planner.py",
+        "tests/test_public_planner.py",
+    ),
+    "subscription-billing-evolution": (
+        "subscription_billing/engine.py",
+        "tests/test_public_billing.py",
+    ),
+}
+TASK_IMPLEMENTATION_FILES = {
+    "agent-policy-evolution": "tool_call_planner/planner.py",
+    "subscription-billing-evolution": "subscription_billing/engine.py",
+}
+TASK_PUBLIC_TEST_FILES = {
+    "agent-policy-evolution": ("tests/test_public_planner.py", 2),
+    "subscription-billing-evolution": ("tests/test_public_billing.py", 2),
+}
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -27,24 +43,26 @@ def discover_runs(runs_root: Path) -> list[Path]:
     return sorted(path.parent for path in runs_root.rglob("RUN_METADATA.json"))
 
 
-def implementation_changed(run_dir: Path) -> bool:
-    planner = run_dir / "tool_call_planner" / "planner.py"
-    if not planner.exists():
+def implementation_changed(run_dir: Path, task: str) -> bool:
+    implementation = run_dir / TASK_IMPLEMENTATION_FILES.get(task, "")
+    if not implementation.exists():
         return False
-    text = planner.read_text(encoding="utf-8")
+    text = implementation.read_text(encoding="utf-8")
     return "raise NotImplementedError" not in text
 
 
-def added_agent_tests(run_dir: Path) -> int:
+def added_agent_tests(run_dir: Path, task: str) -> int:
     tests_dir = run_dir / "tests"
     if not tests_dir.exists():
         return 0
-    public_test = tests_dir / "test_public_planner.py"
+    public_info = TASK_PUBLIC_TEST_FILES.get(task)
+    public_test = run_dir / public_info[0] if public_info else None
+    starter_count = public_info[1] if public_info else 0
     count = 0
     for path in tests_dir.rglob("test_*.py"):
-        if path == public_test:
+        if public_test is not None and path == public_test:
             text = path.read_text(encoding="utf-8")
-            count += max(0, text.count("def test_") - 2)
+            count += max(0, text.count("def test_") - starter_count)
         else:
             count += path.read_text(encoding="utf-8").count("def test_")
     return count
@@ -52,10 +70,12 @@ def added_agent_tests(run_dir: Path) -> int:
 
 def run_status(run_dir: Path) -> dict[str, Any]:
     metadata = load_json(run_dir / "RUN_METADATA.json")
-    missing_files = [name for name in REQUIRED_RUN_FILES if not (run_dir / name).exists()]
+    task = metadata.get("task", "")
+    required_files = (*BASE_REQUIRED_RUN_FILES, *TASK_REQUIRED_FILES.get(task, ()))
+    missing_files = [name for name in required_files if not (run_dir / name).exists()]
     has_score = (run_dir / "seeded-bugs.score.json").exists()
-    changed = implementation_changed(run_dir)
-    test_count = added_agent_tests(run_dir)
+    changed = implementation_changed(run_dir, task)
+    test_count = added_agent_tests(run_dir, task)
 
     if missing_files:
         status = "invalid"

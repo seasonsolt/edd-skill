@@ -95,7 +95,10 @@ It evolves the current `tool-call-planner` task into a more realistic AI-app sce
 2. Policy precedence and approval.
 3. Prompt-injection resistance and missing-tool clarification.
 
-The first prototype in this directory focuses on the `Verification kills seeded bugs` dimension.
+The first prototype in this directory focused on the `Verification kills seeded bugs` dimension. The suite now includes two task families by default:
+
+- `agent-policy-evolution`: tool-use policy and safety boundary verification.
+- `subscription-billing-evolution`: deterministic business-rule verification for money, proration, idempotency, trials, cancellation, and payment-failure transitions.
 
 ## Current Pilot Result
 
@@ -116,10 +119,16 @@ This supports a narrow result: EDD improved verification quality for the SOTA ti
 
 ## Runnable Prototype
 
-Prepare agent-ready run directories:
+Prepare agent-ready run directories. By default this creates the two-task minimum matrix:
 
 ```bash
 python3 benchmarks/sustainability-suite/prepare_model_matrix.py --force
+```
+
+For the default config this is:
+
+```text
+5 trials * 2 task families * 2 model tiers * 2 conditions = 40 runs
 ```
 
 Each run directory contains:

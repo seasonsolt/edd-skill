@@ -12,12 +12,16 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 REPO_ROOT = ROOT.parents[1]
 DEFAULT_CONFIG = ROOT / "model_matrix.json"
-DEFAULT_TASKS = ("agent-policy-evolution",)
+DEFAULT_TASKS = ("agent-policy-evolution", "subscription-billing-evolution")
 TASKS = {
     "agent-policy-evolution": {
         "starter_root": ROOT.parent / "skill-vs-no-skill" / "tasks" / "tool-call-planner",
         "prompt": ROOT / "agent-policy-evolution" / "task_prompt.md",
-    }
+    },
+    "subscription-billing-evolution": {
+        "starter_root": ROOT / "tasks" / "subscription-billing",
+        "prompt": ROOT / "subscription-billing-evolution" / "task_prompt.md",
+    },
 }
 
 

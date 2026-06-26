@@ -17,12 +17,16 @@ ROOT = Path(__file__).resolve().parent
 REPO_ROOT = ROOT.parents[1]
 SEED_SCORERS = {
     "agent-policy-evolution": ROOT / "agent-policy-evolution" / "score_seeded_bugs.py",
+    "subscription-billing-evolution": ROOT / "subscription-billing-evolution" / "score_seeded_bugs.py",
 }
 FUNCTIONAL_SCORERS = {
     "agent-policy-evolution": {
         "script": REPO_ROOT / "benchmarks" / "skill-vs-no-skill" / "score_candidate.py",
         "task": "tool-call-planner",
-    }
+    },
+    "subscription-billing-evolution": {
+        "script": ROOT / "subscription-billing-evolution" / "score_billing_candidate.py",
+    },
 }
 
 
@@ -89,8 +93,7 @@ def score_functional(run_dir: Path, task: str) -> dict[str, Any]:
         [
             sys.executable,
             str(scorer["script"]),
-            "--task",
-            scorer["task"],
+            *(["--task", scorer["task"]] if "task" in scorer else []),
             "--candidate",
             str(run_dir),
             "--json-output",
