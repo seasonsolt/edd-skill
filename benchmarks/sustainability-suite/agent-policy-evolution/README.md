@@ -38,7 +38,7 @@ Add regression coverage for:
 
 ## Prototype Scoring
 
-`score_seeded_bugs.py` runs a candidate's tests against scorer-only flawed implementations.
+`score_seeded_bugs.py` runs a candidate's tests against scorer-only flawed implementations. The seeds are near-correct reference-shaped implementations with one intended mutation, and the scorer only counts a seed as killed when the failure output mentions that seed's mutation surface. This avoids false credit when a candidate test suite rejects a seeded implementation for an unrelated behavior difference.
 
 The useful question is:
 
