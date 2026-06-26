@@ -19,6 +19,41 @@ from typing import Any
 import run_model_matrix
 
 
+def snapshot_run_dir(run_dir: Path) -> dict[str, bytes]:
+    """Capture run directory file contents before a Codex execution.
+
+    Codex runs with workspace-write so it can inspect and edit a temporary task
+    directory, but this benchmark runner only trusts files returned through the
+    final JSON object and validated by run_model_matrix.apply_files().
+    """
+
+    snapshot = {}
+    for path in sorted(run_dir.rglob("*")):
+        if path.is_file() or path.is_symlink():
+            snapshot[str(path.relative_to(run_dir)).replace("\\", "/")] = path.read_bytes()
+    return snapshot
+
+
+def changed_paths(run_dir: Path, snapshot: dict[str, bytes]) -> list[str]:
+    current = {}
+    for path in sorted(run_dir.rglob("*")):
+        if path.is_file() or path.is_symlink():
+            current[str(path.relative_to(run_dir)).replace("\\", "/")] = path.read_bytes()
+    return sorted(path for path in set(snapshot) | set(current) if snapshot.get(path) != current.get(path))
+
+
+def restore_run_dir(run_dir: Path, snapshot: dict[str, bytes]) -> None:
+    for path in sorted(run_dir.rglob("*"), reverse=True):
+        if path.is_file() or path.is_symlink():
+            relative = str(path.relative_to(run_dir)).replace("\\", "/")
+            if relative not in snapshot:
+                path.unlink()
+    for relative, content in snapshot.items():
+        path = run_dir / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(content)
+
+
 def run_codex(prompt: str, run_dir: Path, model: str, timeout: int) -> tuple[str, int, str, str]:
     with tempfile.NamedTemporaryFile("w+", encoding="utf-8", suffix=".txt", delete=False) as output:
         output_path = Path(output.name)
@@ -59,11 +94,15 @@ def run_one(run_dir: Path, timeout: int) -> dict[str, Any]:
         raise ValueError(f"run metadata has invalid task: {task}")
     model = metadata.get("model_id") or ""
     prompt = run_model_matrix.build_prompt(run_dir, metadata)
+    snapshot = snapshot_run_dir(run_dir)
     raw, returncode, stdout, stderr = run_codex(prompt, run_dir, model, timeout)
+    direct_changes = changed_paths(run_dir, snapshot)
+    restore_run_dir(run_dir, snapshot)
     if returncode != 0:
         metadata["status"] = "failed"
         metadata["completed_by"] = "run_codex_matrix.py"
         metadata["codex_returncode"] = returncode
+        metadata["codex_direct_changes_discarded"] = direct_changes
         metadata_path.write_text(json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         (run_dir / "CODEX_RUN_ERROR.txt").write_text(
             f"returncode: {returncode}\n\nSTDOUT:\n{stdout}\n\nSTDERR:\n{stderr}\n\nLAST_MESSAGE:\n{raw}\n",
@@ -76,6 +115,7 @@ def run_one(run_dir: Path, timeout: int) -> dict[str, Any]:
     metadata["status"] = "completed"
     metadata["completed_by"] = "run_codex_matrix.py"
     metadata["response_parse_mode"] = parse_mode
+    metadata["codex_direct_changes_discarded"] = direct_changes
     metadata_path.write_text(json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     (run_dir / "MODEL_RESPONSE.json").write_text(
         json.dumps(
@@ -84,6 +124,7 @@ def run_one(run_dir: Path, timeout: int) -> dict[str, Any]:
                 "parsed": response,
                 "parse_mode": parse_mode,
                 "written": written,
+                "codex_direct_changes_discarded": direct_changes,
                 "codex_stdout_tail": stdout[-4000:],
                 "codex_stderr_tail": stderr[-4000:],
             },

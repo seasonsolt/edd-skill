@@ -159,9 +159,19 @@ def extract_json(text: str) -> tuple[dict[str, Any], str]:
         return parsed, "fallback_raw_decode"
 
 
-def is_allowed_path(path: str, task: str) -> bool:
-    normalized = path.replace("\\", "/").lstrip("/")
+def normalize_relative_path(path: str) -> str:
+    normalized = path.replace("\\", "/")
+    if Path(normalized).is_absolute():
+        raise ValueError(f"absolute paths are not allowed: {path}")
     if ".." in Path(normalized).parts:
+        raise ValueError(f"parent-directory paths are not allowed: {path}")
+    return normalized
+
+
+def is_allowed_path(path: str, task: str) -> bool:
+    try:
+        normalized = normalize_relative_path(path)
+    except ValueError:
         return False
     task_files = TASK_FILES.get(task)
     task_prefixes = task_files.get("allowed_prefixes", ()) if task_files else ()
@@ -188,10 +198,11 @@ def apply_files(run_dir: Path, response: dict[str, Any], task: str) -> list[str]
             )
         if not is_allowed_path(path, task):
             raise ValueError(f"model tried to write disallowed path: {path}")
-        destination = run_dir / path
+        normalized = normalize_relative_path(path)
+        destination = run_dir / normalized
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_text(content, encoding="utf-8")
-        written.append(path)
+        written.append(normalized)
     return written
 
 
