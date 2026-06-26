@@ -54,6 +54,9 @@ def run_codex(prompt: str, run_dir: Path, model: str, timeout: int) -> tuple[str
 def run_one(run_dir: Path, timeout: int) -> dict[str, Any]:
     metadata_path = run_dir / "RUN_METADATA.json"
     metadata = run_model_matrix.load_json(metadata_path)
+    task = metadata.get("task")
+    if not isinstance(task, str):
+        raise ValueError(f"run metadata has invalid task: {task}")
     model = metadata.get("model_id") or ""
     prompt = run_model_matrix.build_prompt(run_dir, metadata)
     raw, returncode, stdout, stderr = run_codex(prompt, run_dir, model, timeout)
@@ -69,7 +72,7 @@ def run_one(run_dir: Path, timeout: int) -> dict[str, Any]:
         raise RuntimeError(f"codex failed for {run_dir} with returncode {returncode}")
 
     response, parse_mode = run_model_matrix.extract_json(raw)
-    written = run_model_matrix.apply_files(run_dir, response)
+    written = run_model_matrix.apply_files(run_dir, response, task)
     metadata["status"] = "completed"
     metadata["completed_by"] = "run_codex_matrix.py"
     metadata["response_parse_mode"] = parse_mode

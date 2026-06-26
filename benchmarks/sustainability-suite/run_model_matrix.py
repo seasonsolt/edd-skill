@@ -18,10 +18,21 @@ ROOT = Path(__file__).resolve().parent
 REPO_ROOT = ROOT.parents[1]
 EDD_SKILL_PATH = REPO_ROOT / ".agents" / "skills" / "eval-driven-ai-tdd" / "SKILL.md"
 ALLOWED_WRITE_PREFIXES = (
-    "tool_call_planner/",
     "tests/",
     "evals/",
 )
+TASK_FILES = {
+    "agent-policy-evolution": {
+        "implementation": "tool_call_planner/planner.py",
+        "public_test": "tests/test_public_planner.py",
+        "allowed_prefixes": ("tool_call_planner/",),
+    },
+    "subscription-billing-evolution": {
+        "implementation": "subscription_billing/engine.py",
+        "public_test": "tests/test_public_billing.py",
+        "allowed_prefixes": ("subscription_billing/",),
+    },
+}
 ALLOWED_WRITE_FILES = {
     "EDD_REPORT.md",
     "AI_TDD_REPORT.md",
@@ -42,11 +53,18 @@ def read_optional(path: Path) -> str:
 
 
 def build_prompt(run_dir: Path, metadata: dict[str, Any]) -> str:
+    task = metadata.get("task")
+    if not isinstance(task, str):
+        raise ValueError(f"run metadata has invalid task: {task}")
+    task_files = TASK_FILES.get(task)
+    if task_files is None:
+        raise ValueError(f"unsupported task for model runner: {task}")
+
     files = {
         "PROMPT.md": read_optional(run_dir / "PROMPT.md"),
         "TASK.md": read_optional(run_dir / "TASK.md"),
-        "tool_call_planner/planner.py": read_optional(run_dir / "tool_call_planner" / "planner.py"),
-        "tests/test_public_planner.py": read_optional(run_dir / "tests" / "test_public_planner.py"),
+        task_files["implementation"]: read_optional(run_dir / task_files["implementation"]),
+        task_files["public_test"]: read_optional(run_dir / task_files["public_test"]),
     }
     file_blocks = "\n\n".join(
         f"### {path}\n```text\n{content}\n```" for path, content in files.items()
@@ -76,7 +94,8 @@ Return only a JSON object with this shape:
 Rules:
 - Do not return Markdown fences.
 - Include full contents for every file you create or modify.
-- You may modify files under `tool_call_planner/`, files under `tests/`, files under `evals/`, and `EDD_REPORT.md`.
+- You may modify the task implementation file, files under `tests/`, files under `evals/`, and `EDD_REPORT.md`.
+- For this task, implementation writes are allowed under: `{", ".join(task_files["allowed_prefixes"])}`.
 - Keep the public API exactly as specified.
 - Do not mention hidden tests or scorer internals.
 
@@ -140,14 +159,16 @@ def extract_json(text: str) -> tuple[dict[str, Any], str]:
         return parsed, "fallback_raw_decode"
 
 
-def is_allowed_path(path: str) -> bool:
+def is_allowed_path(path: str, task: str) -> bool:
     normalized = path.replace("\\", "/").lstrip("/")
     if ".." in Path(normalized).parts:
         return False
-    return normalized in ALLOWED_WRITE_FILES or normalized.startswith(ALLOWED_WRITE_PREFIXES)
+    task_files = TASK_FILES.get(task)
+    task_prefixes = task_files.get("allowed_prefixes", ()) if task_files else ()
+    allowed_prefixes = (*ALLOWED_WRITE_PREFIXES, *task_prefixes)
+    return normalized in ALLOWED_WRITE_FILES or normalized.startswith(allowed_prefixes)
 
-
-def apply_files(run_dir: Path, response: dict[str, Any]) -> list[str]:
+def apply_files(run_dir: Path, response: dict[str, Any], task: str) -> list[str]:
     files = response.get("files")
     if not isinstance(files, list):
         raise ValueError("model response must contain a files list")
@@ -165,7 +186,7 @@ def apply_files(run_dir: Path, response: dict[str, Any]) -> list[str]:
             raise ValueError(
                 f"model tried to write oversized file: {path} ({content_size} bytes > {MAX_WRITTEN_FILE_BYTES})"
             )
-        if not is_allowed_path(path):
+        if not is_allowed_path(path, task):
             raise ValueError(f"model tried to write disallowed path: {path}")
         destination = run_dir / path
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -177,6 +198,9 @@ def apply_files(run_dir: Path, response: dict[str, Any]) -> list[str]:
 def run_one(run_dir: Path, base_url: str, api_key: str, timeout: int, retries: int) -> dict[str, Any]:
     metadata_path = run_dir / "RUN_METADATA.json"
     metadata = load_json(metadata_path)
+    task = metadata.get("task")
+    if not isinstance(task, str):
+        raise ValueError(f"run metadata has invalid task: {task}")
     model = metadata.get("model_id")
     if not model:
         raise ValueError(f"run has no model_id: {run_dir}")
@@ -184,7 +208,7 @@ def run_one(run_dir: Path, base_url: str, api_key: str, timeout: int, retries: i
     prompt = build_prompt(run_dir, metadata)
     raw = call_chat_api(base_url, api_key, model, prompt, timeout, retries)
     response, parse_mode = extract_json(raw)
-    written = apply_files(run_dir, response)
+    written = apply_files(run_dir, response, task)
     metadata["status"] = "completed"
     metadata["completed_by"] = "run_model_matrix.py"
     metadata["response_parse_mode"] = parse_mode
