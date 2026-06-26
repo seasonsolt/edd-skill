@@ -127,6 +127,18 @@ A one-trial provider-backed smoke has now run the default two-task matrix end-to
 
 All 8 runs scored. See [`docs/TWO_TASK_LIVE_SMOKE.md`](../../docs/TWO_TASK_LIVE_SMOKE.md) for the table and interpretation. Treat this as a runner/scorer smoke, not as a headline benchmark claim.
 
+## Current Full Matrix Result
+
+The full two-task matrix has also run end-to-end:
+
+```text
+5 trials * 2 task families * 2 model tiers * 2 conditions = 40 runs
+```
+
+All 40 runs scored. See [`docs/TWO_TASK_FULL_MATRIX_RESULTS.md`](../../docs/TWO_TASK_FULL_MATRIX_RESULTS.md).
+
+Summary: EDD strongly improved process evidence in every task/model-tier group, but it did not produce reliable hidden functional correctness uplift. Aggregate seeded-bug deltas were small (`+0.25` economical, `-0.5` SOTA), while process deltas were large.
+
 ## Runnable Prototype
 
 Prepare agent-ready run directories. By default this creates the two-task minimum matrix:

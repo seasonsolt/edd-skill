@@ -119,24 +119,26 @@ The useful habit is simple: make the agent prove what done means before it claim
 - Benchmark threat model: [docs/BENCHMARK_THREATS.md](docs/BENCHMARK_THREATS.md)
 - Sustainability pilot: [benchmarks/sustainability-suite/](benchmarks/sustainability-suite/)
 - Two-task live smoke: [docs/TWO_TASK_LIVE_SMOKE.md](docs/TWO_TASK_LIVE_SMOKE.md)
+- Two-task full matrix: [docs/TWO_TASK_FULL_MATRIX_RESULTS.md](docs/TWO_TASK_FULL_MATRIX_RESULTS.md)
 
 ## Next
 
-The second sustainability task family, `subscription-billing-evolution`, is now implemented and the two-task runner has completed a one-trial live smoke:
-
-```text
-1 trial * 2 task families * 2 model tiers * 2 conditions = 8 agent runs
-```
-
-See [docs/TWO_TASK_LIVE_SMOKE.md](docs/TWO_TASK_LIVE_SMOKE.md). Treat that smoke as runner/scorer validation, not as a headline benchmark claim.
-
-The next useful benchmark is the full planned two-task matrix:
+The second sustainability task family, `subscription-billing-evolution`, is now implemented and the two-task runner has completed the full planned matrix:
 
 ```text
 5 trials * 2 task families * 2 model tiers * 2 conditions = 40 agent runs
 ```
 
-That would test whether the verification-first loop holds beyond one task family with enough trials to compare task-family and model-tier behavior.
+See [docs/TWO_TASK_FULL_MATRIX_RESULTS.md](docs/TWO_TASK_FULL_MATRIX_RESULTS.md). The result strengthens the process-evidence claim, but it does not show reliable hidden functional correctness improvement.
+
+The next useful benchmark step is a versioned follow-up after fixing recurring task misses:
+
+```text
+agent-policy: no-matching-tool clarification
+subscription-billing: cancellation semantics
+```
+
+Do not compare a changed prompt/test version directly against the current run unless the benchmark version is recorded.
 
 Other high-value next steps:
 

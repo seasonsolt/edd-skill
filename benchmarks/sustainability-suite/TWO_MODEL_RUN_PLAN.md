@@ -32,11 +32,13 @@ Completed two-task live smoke:
 
 See [`docs/TWO_TASK_LIVE_SMOKE.md`](../../docs/TWO_TASK_LIVE_SMOKE.md). Use it as runner/scorer validation only; it is not enough for headline claims.
 
-Next minimum credible sustainability benchmark:
+Completed two-task full matrix:
 
 ```text
 5 trials * 2 task families * 2 model tiers * 2 conditions = 40 runs
 ```
+
+See [`docs/TWO_TASK_FULL_MATRIX_RESULTS.md`](../../docs/TWO_TASK_FULL_MATRIX_RESULTS.md). The result supports process-evidence uplift, not reliable hidden functional correctness uplift.
 
 ## Prepare Matrix
 
