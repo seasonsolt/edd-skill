@@ -437,10 +437,18 @@ def score(task: str, candidate: Path) -> dict:
         [sys.executable, str(SCORER), "--task", task, "--candidate", str(candidate)],
         text=True,
         capture_output=True,
+        timeout=90,
     )
+    try:
+        parsed = json.loads(completed.stdout)
+    except json.JSONDecodeError as error:
+        raise RuntimeError(
+            f"scorer did not return JSON for {task} {candidate}\n"
+            f"returncode: {completed.returncode}\nstdout:\n{completed.stdout}\nstderr:\n{completed.stderr}"
+        ) from error
     return {
         "returncode": completed.returncode,
-        "score": json.loads(completed.stdout),
+        "score": parsed,
     }
 
 

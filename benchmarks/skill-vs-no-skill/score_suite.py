@@ -8,6 +8,7 @@ import json
 import statistics
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -37,12 +38,33 @@ def score_candidate(task: str, candidate: Path, output_path: Path) -> dict:
         ],
         text=True,
         capture_output=True,
+        timeout=120,
     )
     if output_path.exists():
         return json.loads(output_path.read_text(encoding="utf-8"))
     raise RuntimeError(
         f"scoring failed for {task} {candidate}\nstdout:\n{completed.stdout}\nstderr:\n{completed.stderr}"
     )
+
+
+def update_run_metadata(run_dir: Path, score: dict, score_path: Path) -> None:
+    metadata_path = run_dir / "RUN_METADATA.json"
+    metadata = {}
+    if metadata_path.exists():
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    metadata.update(
+        {
+            "status": "scored",
+            "scored_at": datetime.now(timezone.utc).isoformat(),
+            "score_path": str(score_path),
+            "score": score["score"],
+            "functional_score": score["functional"]["score"],
+            "process_score": score["process"]["score"],
+            "public_passed": score["functional"]["public_passed"],
+            "hidden_passed": score["functional"]["hidden_passed"],
+        }
+    )
+    metadata_path.write_text(json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
 def compact(score: dict) -> dict:
@@ -90,8 +112,12 @@ def main() -> int:
         if not baseline.exists() or not with_skill.exists():
             raise SystemExit(f"expected paired runs under {task_root}; run prepare_suite.py first")
 
-        baseline_score = score_candidate(task, baseline, task_root / "baseline.score.json")
-        skill_score = score_candidate(task, with_skill, task_root / "with-skill.score.json")
+        baseline_score_path = task_root / "baseline.score.json"
+        skill_score_path = task_root / "with-skill.score.json"
+        baseline_score = score_candidate(task, baseline, baseline_score_path)
+        skill_score = score_candidate(task, with_skill, skill_score_path)
+        update_run_metadata(baseline, baseline_score, baseline_score_path)
+        update_run_metadata(with_skill, skill_score, skill_score_path)
         task_result = {
             "baseline": compact(baseline_score),
             "with_skill": compact(skill_score),

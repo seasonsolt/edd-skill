@@ -57,6 +57,7 @@ def score_run(run_dir: Path) -> dict[str, Any]:
         ],
         text=True,
         capture_output=True,
+        timeout=120,
     )
     if not output_path.exists():
         raise RuntimeError(
@@ -97,6 +98,7 @@ def score_functional(run_dir: Path, task: str) -> dict[str, Any]:
         ],
         text=True,
         capture_output=True,
+        timeout=120,
     )
     if not output_path.exists():
         raise RuntimeError(

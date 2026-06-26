@@ -28,6 +28,7 @@ def score_trial(trial_root: Path) -> dict:
         [sys.executable, str(SCORE_SUITE), "--runs-root", str(trial_root)],
         text=True,
         capture_output=True,
+        timeout=180,
     )
     if completed.returncode != 0:
         raise RuntimeError(

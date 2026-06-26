@@ -48,6 +48,42 @@ This pilot asked whether agent-written tests catch seeded bugs:
 
 On `gpt-5.5`, EDD made the agent write verification that killed every seeded bug. On `gpt-5.4-mini`, this setup did not help. No group passed the original hidden functional tests.
 
+## Current Evidence Boundary
+
+Supported by the current benchmark:
+
+- Better process artifacts and auditability.
+- More consistent red/green logs, eval directories, reports, and regression evidence.
+
+Not yet proven:
+
+- Broad hidden functional correctness improvement.
+- Reliable uplift for economical/smaller model tiers.
+
+Always read total-score gains together with functional score and hidden pass rate.
+
+## Quickstart
+
+Run the benchmark integrity check:
+
+```bash
+python3 benchmarks/skill-vs-no-skill/verify_benchmark.py
+```
+
+Prepare a one-trial smoke run:
+
+```bash
+python3 benchmarks/skill-vs-no-skill/prepare_trials.py \
+  --trials-root runs/demo-trials \
+  --trial-count 1 \
+  --clean-root
+python3 benchmarks/skill-vs-no-skill/trial_status.py \
+  --trials-root runs/demo-trials \
+  --expected-trial-count 1
+```
+
+Give each agent only its own generated run directory and `PROMPT.md`. Do not expose hidden tests, scorer scripts, sibling runs, or prior results. Prepared run directories include `RUN_METADATA.json`; scoring updates that file with score/status fields.
+
 ## Use It
 
 1. Install or reference the skill in Codex:
@@ -55,6 +91,8 @@ On `gpt-5.5`, EDD made the agent write verification that killed every seeded bug
    ```text
    Use $eval-driven-ai-tdd.
    ```
+
+   The installable skill name is currently `$eval-driven-ai-tdd`; `EDD Skill` is the project/product name.
 
 2. Ask the agent to start from the expected result:
 
@@ -78,6 +116,7 @@ The useful habit is simple: make the agent prove what done means before it claim
 - Skill: [.agents/skills/eval-driven-ai-tdd/SKILL.md](.agents/skills/eval-driven-ai-tdd/SKILL.md)
 - Main benchmark results: [benchmarks/skill-vs-no-skill/RESULTS.md](benchmarks/skill-vs-no-skill/RESULTS.md)
 - Benchmark case review: [docs/EDD_BENCHMARK_CASE_REVIEW.md](docs/EDD_BENCHMARK_CASE_REVIEW.md)
+- Benchmark threat model: [docs/BENCHMARK_THREATS.md](docs/BENCHMARK_THREATS.md)
 - Sustainability pilot: [benchmarks/sustainability-suite/](benchmarks/sustainability-suite/)
 
 ## Next
@@ -89,3 +128,9 @@ The next useful benchmark is a second sustainability task family, likely `subscr
 ```
 
 That would test whether the verification-first loop holds beyond one task family.
+
+Other high-value next steps:
+
+- Promote seeded-bug / mutation scoring into the main benchmark instead of relying heavily on process-keyword hits.
+- Track cost, elapsed time, token use, tool-call count, and file-change counts per run.
+- Split long-term reports into a main suite and an evolution suite so `tool-call-planner-v2` is not treated as fully independent from `tool-call-planner`.

@@ -7,6 +7,8 @@ import argparse
 import shutil
 from pathlib import Path
 
+from run_metadata import write_run_metadata
+
 
 ROOT = Path(__file__).resolve().parent
 REPO_ROOT = ROOT.parents[1]
@@ -34,9 +36,16 @@ TASKS = {
 }
 
 
-def copy_task(source: Path, destination: Path, prompt: str) -> None:
+def copy_task(source: Path, destination: Path, prompt: str, *, task: str, condition: str, prompt_prefix: str) -> None:
     shutil.copytree(source, destination)
     (destination / "PROMPT.md").write_text(prompt, encoding="utf-8")
+    write_run_metadata(
+        destination,
+        trial=None,
+        task=task,
+        condition=condition,
+        prompt_prefix=prompt_prefix,
+    )
 
 
 def main() -> int:
@@ -63,8 +72,15 @@ def main() -> int:
         base_prompt = task["prompt"].read_text(encoding="utf-8")
         skill_prompt = "Use $eval-driven-ai-tdd.\n\n" + base_prompt
 
-        copy_task(task["starter_root"], baseline, base_prompt)
-        copy_task(task["starter_root"], with_skill, skill_prompt)
+        copy_task(task["starter_root"], baseline, base_prompt, task=task_name, condition="baseline", prompt_prefix="")
+        copy_task(
+            task["starter_root"],
+            with_skill,
+            skill_prompt,
+            task=task_name,
+            condition="with-skill",
+            prompt_prefix="Use $eval-driven-ai-tdd.\n\n",
+        )
         print(f"created {baseline}")
         print(f"created {with_skill}")
 

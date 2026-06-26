@@ -130,6 +130,8 @@ Each run directory contains:
 - `PROMPT.md`;
 - `RUN_METADATA.json`.
 
+`run_model_matrix.py` expects a single JSON object response, records whether parsing was strict or fallback raw-decode, rejects trailing non-JSON content, limits writes to allowed task paths, and rejects oversized generated files.
+
 After agents complete those directories, aggregate seeded-bug scores:
 
 ```bash

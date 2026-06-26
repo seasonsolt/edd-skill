@@ -10,6 +10,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 
@@ -121,13 +122,33 @@ def edge_hits_for_text(text: str, keywords: dict[str, list[str]]) -> set[str]:
     return {name for name, terms in keywords.items() if any(term in text for term in terms)}
 
 
-def run_command(command: list[str], cwd: Path) -> dict:
-    completed = subprocess.run(command, cwd=cwd, text=True, capture_output=True)
+def run_command(command: list[str], cwd: Path, timeout: int = 60) -> dict:
+    started = time.monotonic()
+    try:
+        completed = subprocess.run(
+            command,
+            cwd=cwd,
+            text=True,
+            capture_output=True,
+            timeout=timeout,
+        )
+        timed_out = False
+        returncode = completed.returncode
+        stdout = completed.stdout
+        stderr = completed.stderr
+    except subprocess.TimeoutExpired as error:
+        timed_out = True
+        returncode = 124
+        stdout = error.stdout or ""
+        stderr = (error.stderr or "") + f"\nCommand timed out after {timeout}s"
     return {
         "command": " ".join(command),
-        "returncode": completed.returncode,
-        "stdout": completed.stdout,
-        "stderr": completed.stderr,
+        "returncode": returncode,
+        "stdout": stdout,
+        "stderr": stderr,
+        "timed_out": timed_out,
+        "timeout_seconds": timeout,
+        "duration_seconds": round(time.monotonic() - started, 3),
     }
 
 

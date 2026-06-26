@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Check whether a project left basic eval-driven TDD evidence."""
+"""Check whether a completed agent run left basic EDD evidence.
+
+This checker is intended for a single completed task/run directory, not for
+the edd-skill benchmark repository root.
+"""
 
 from __future__ import annotations
 
@@ -47,6 +51,26 @@ def find_report(root: Path) -> Path | None:
     return None
 
 
+def looks_like_edd_benchmark_repo(root: Path) -> bool:
+    return (
+        (root / ".agents" / "skills" / "eval-driven-ai-tdd" / "SKILL.md").exists()
+        and (root / "benchmarks" / "skill-vs-no-skill" / "score_candidate.py").exists()
+    )
+
+
+def usage_notes(root: Path) -> list[str]:
+    notes = [
+        "check_ai_tdd_artifacts.py is intended for one completed agent task/run directory.",
+        "Pass --project-root <agent-run-dir>, for example runs/.../<task>/<condition>.",
+    ]
+    if looks_like_edd_benchmark_repo(root):
+        notes.insert(
+            0,
+            "This path looks like the edd-skill benchmark repository root, not a completed agent run directory.",
+        )
+    return notes
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--project-root", default=".", help="Project root to inspect")
@@ -78,6 +102,8 @@ def main() -> int:
     ]
     checks = {
         "project_root": str(root),
+        "usage_notes": usage_notes(root),
+        "looks_like_edd_benchmark_repo": looks_like_edd_benchmark_repo(root),
         "has_report": report is not None,
         "report_path": str(report.relative_to(root)) if report else None,
         "report_sections": report_sections(report) if report else [],

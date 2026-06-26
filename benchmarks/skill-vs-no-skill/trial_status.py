@@ -63,6 +63,13 @@ def score_path_for(run_root: Path, condition: str) -> Path:
     return run_root.parent / f"{condition}.score.json"
 
 
+def load_run_metadata(run_root: Path) -> dict[str, Any] | None:
+    path = run_root / "RUN_METADATA.json"
+    if not path.exists():
+        return None
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
 def score_status(score_path: Path) -> dict[str, Any] | None:
     if not score_path.exists():
         return None
@@ -79,6 +86,7 @@ def score_status(score_path: Path) -> dict[str, Any] | None:
 def run_status(trial: str, task: str, condition: str, run_root: Path) -> dict[str, Any]:
     score_path = score_path_for(run_root, condition)
     score = score_status(score_path)
+    metadata = load_run_metadata(run_root) if run_root.exists() else None
     exists = run_root.exists()
     prompt_exists = (run_root / "PROMPT.md").exists()
     marker_exists = exists and (run_root / TASKS[task]["marker"]).exists()
@@ -113,6 +121,8 @@ def run_status(trial: str, task: str, condition: str, run_root: Path) -> dict[st
         "added_test_count": tests_added,
         "score_path": str(score_path),
         "score": score,
+        "metadata": metadata,
+        "metadata_status": metadata.get("status") if metadata else None,
     }
 
 

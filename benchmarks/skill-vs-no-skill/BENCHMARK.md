@@ -32,7 +32,7 @@ Each task has:
 - `baseline/`
 - `with-skill/`
 
-Each run directory contains its own `PROMPT.md`. Open a fresh agent thread for each run and give it only that run directory plus its prompt.
+Each run directory contains its own `PROMPT.md` and `RUN_METADATA.json`. Open a fresh agent thread for each run and give it only that run directory plus its prompt.
 
 ## Single-Task Setup
 
@@ -47,7 +47,7 @@ This creates:
 - `runs/skill-vs-no-skill/baseline`
 - `runs/skill-vs-no-skill/with-skill`
 
-Each run directory contains a `PROMPT.md`. Open a fresh agent thread for each copy and give it that directory plus its prompt.
+Each run directory contains `PROMPT.md` and `RUN_METADATA.json`. Open a fresh agent thread for each copy and give it that directory plus its prompt.
 
 The skill condition prepends:
 
@@ -88,7 +88,7 @@ After agents complete each trial, aggregate them:
 python3 benchmarks/skill-vs-no-skill/score_trials.py --trials-root runs/skill-vs-no-skill-trials-5task --expected-trial-count 5
 ```
 
-This writes `runs/skill-vs-no-skill-trials-5task/trials-summary.json`.
+This writes `runs/skill-vs-no-skill-trials-5task/trials-summary.json`. Scoring also updates each run directory's `RUN_METADATA.json` with status and score fields.
 
 Five trials across the current five task families require 50 independent agent runs:
 
@@ -144,6 +144,20 @@ The score has two parts:
 
 Do not assume the skill will help. A valid experiment may show functional improvement, process-only improvement, no measurable effect, functional regression, or insufficient evidence. The benchmark loop exists to separate those outcomes.
 
+## Run Metadata
+
+Prepared runs include `RUN_METADATA.json` with at least:
+
+- `trial`
+- `task`
+- `condition`
+- `prompt_prefix`
+- `status`
+- `prepared_at`
+- optional `model_id`, `model_provider`, and `runner`
+
+Scoring updates the metadata with `status: scored`, score fields, pass/fail flags, `score_path`, and `scored_at`.
+
 ## Interpreting Results
 
 Treat one pair as a smoke test, not proof. A credible claim needs:
@@ -153,10 +167,10 @@ Treat one pair as a smoke test, not proof. A credible claim needs:
 - Identical model, approval settings, and time budget across paired runs.
 - Passing benchmark integrity checks.
 - Median total score, functional score, process score, hidden-test pass rate, and worst-case score.
-- Preserved raw artifacts: prompts, final files, score JSON, red/green logs, and reports.
+- Preserved raw artifacts: prompts, run metadata, final files, score JSON, red/green logs, and reports.
 
 Useful follow-up measurements:
 
-- Track median total score, hidden-test pass rate, process score, and added regression count.
+- Track median total score, hidden-test pass rate, process score, elapsed time, token/tool-call cost, file-change count, and added regression count.
 - Inspect whether process artifacts catch failures that hidden tests also catch.
 - Tighten the skill only when the failure repeats across multiple runs.

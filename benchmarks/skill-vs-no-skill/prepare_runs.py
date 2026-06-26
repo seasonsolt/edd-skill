@@ -7,6 +7,8 @@ import argparse
 import shutil
 from pathlib import Path
 
+from run_metadata import write_run_metadata
+
 
 ROOT = Path(__file__).resolve().parent
 REPO_ROOT = ROOT.parents[1]
@@ -14,9 +16,16 @@ TASK_ROOT = ROOT / "task"
 TASK_PROMPT = ROOT / "task_prompt.md"
 
 
-def copy_task(destination: Path, prompt: str) -> None:
+def copy_task(destination: Path, prompt: str, *, condition: str, prompt_prefix: str) -> None:
     shutil.copytree(TASK_ROOT, destination)
     (destination / "PROMPT.md").write_text(prompt, encoding="utf-8")
+    write_run_metadata(
+        destination,
+        trial=None,
+        task="quote-engine",
+        condition=condition,
+        prompt_prefix=prompt_prefix,
+    )
 
 
 def main() -> int:
@@ -42,8 +51,8 @@ def main() -> int:
     base_prompt = TASK_PROMPT.read_text(encoding="utf-8")
     skill_prompt = "Use $eval-driven-ai-tdd.\n\n" + base_prompt
 
-    copy_task(baseline, base_prompt)
-    copy_task(with_skill, skill_prompt)
+    copy_task(baseline, base_prompt, condition="baseline", prompt_prefix="")
+    copy_task(with_skill, skill_prompt, condition="with-skill", prompt_prefix="Use $eval-driven-ai-tdd.\n\n")
 
     print(f"created {baseline}")
     print(f"created {with_skill}")

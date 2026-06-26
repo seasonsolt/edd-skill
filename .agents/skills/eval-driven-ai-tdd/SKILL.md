@@ -5,6 +5,8 @@ description: "Use for AI coding tasks where correctness depends on evals, benchm
 
 # EDD Skill
 
+EDD means Eval-Driven Development. The installable skill name is currently `$eval-driven-ai-tdd`; `EDD Skill` is the project/product name. If you later create a shorter `$edd` alias, keep `$eval-driven-ai-tdd` as a compatibility name.
+
 EDD means Eval-Driven Development. Use this skill to make evaluation the first artifact in an AI coding project, then keep every agent coding loop attached to that evaluation contract. The goal is not extra process. The goal is to give the agent a stable target and leave evidence that the loop followed it.
 
 ## Workflow
@@ -72,7 +74,7 @@ For AI/RAG/prompt tasks, use `evals/*.jsonl` with one case per line. For determi
 Read `references/eval-first-contract.md` when designing a new benchmark, rubric, or scoring contract.
 Read `references/benchmark-protocol.md` when comparing agent performance, skills, prompts, models, or tools.
 
-Run `scripts/check_ai_tdd_artifacts.py --project-root <repo>` before finishing when this skill created new tests/evals or a report.
+Run `scripts/check_ai_tdd_artifacts.py --project-root <agent-run-dir>` before finishing when this skill created new tests/evals or a report. Use the completed task/run directory, not the edd-skill benchmark repository root.
 
 ## Benchmarking Agent Performance
 

@@ -26,6 +26,7 @@ ALLOWED_WRITE_FILES = {
     "EDD_REPORT.md",
     "AI_TDD_REPORT.md",
 }
+MAX_WRITTEN_FILE_BYTES = 200_000
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -120,26 +121,23 @@ def call_chat_api(base_url: str, api_key: str, model: str, prompt: str, timeout:
     raise RuntimeError(f"chat API failed after {retries} attempts: {last_error}")
 
 
-def extract_json(text: str) -> dict[str, Any]:
+def extract_json(text: str) -> tuple[dict[str, Any], str]:
     cleaned = text.strip()
     if cleaned.startswith("```"):
         cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned)
         cleaned = re.sub(r"\s*```$", "", cleaned)
     try:
-        return json.loads(cleaned)
+        return json.loads(cleaned), "strict"
     except json.JSONDecodeError:
         decoder = json.JSONDecoder()
         start = cleaned.find("{")
-        if start >= 0:
-            try:
-                parsed, _ = decoder.raw_decode(cleaned[start:])
-                return parsed
-            except json.JSONDecodeError:
-                pass
-        match = re.search(r"\{.*\}", cleaned, re.DOTALL)
-        if not match:
+        if start < 0:
             raise
-        return json.loads(match.group(0))
+        parsed, end = decoder.raw_decode(cleaned[start:])
+        trailing = cleaned[start + end :].strip()
+        if trailing:
+            raise ValueError("model response contained non-JSON trailing content after first JSON object")
+        return parsed, "fallback_raw_decode"
 
 
 def is_allowed_path(path: str) -> bool:
@@ -162,6 +160,11 @@ def apply_files(run_dir: Path, response: dict[str, Any]) -> list[str]:
         content = item.get("content")
         if not isinstance(path, str) or not isinstance(content, str):
             raise ValueError("each file item needs string path and content")
+        content_size = len(content.encode("utf-8"))
+        if content_size > MAX_WRITTEN_FILE_BYTES:
+            raise ValueError(
+                f"model tried to write oversized file: {path} ({content_size} bytes > {MAX_WRITTEN_FILE_BYTES})"
+            )
         if not is_allowed_path(path):
             raise ValueError(f"model tried to write disallowed path: {path}")
         destination = run_dir / path
@@ -180,13 +183,18 @@ def run_one(run_dir: Path, base_url: str, api_key: str, timeout: int, retries: i
 
     prompt = build_prompt(run_dir, metadata)
     raw = call_chat_api(base_url, api_key, model, prompt, timeout, retries)
-    response = extract_json(raw)
+    response, parse_mode = extract_json(raw)
     written = apply_files(run_dir, response)
     metadata["status"] = "completed"
     metadata["completed_by"] = "run_model_matrix.py"
+    metadata["response_parse_mode"] = parse_mode
     metadata_path.write_text(json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     (run_dir / "MODEL_RESPONSE.json").write_text(
-        json.dumps({"raw": raw, "parsed": response, "written": written}, indent=2, sort_keys=True) + "\n",
+        json.dumps(
+            {"raw": raw, "parsed": response, "parse_mode": parse_mode, "written": written},
+            indent=2,
+            sort_keys=True,
+        ) + "\n",
         encoding="utf-8",
     )
     return {
