@@ -122,13 +122,21 @@ The useful habit is simple: make the agent prove what done means before it claim
 
 ## Next
 
-The next useful benchmark is a second sustainability task family, likely `subscription-billing-evolution`:
+The second sustainability task family, `subscription-billing-evolution`, is now implemented and the two-task runner has completed a one-trial live smoke:
+
+```text
+1 trial * 2 task families * 2 model tiers * 2 conditions = 8 agent runs
+```
+
+See [docs/TWO_TASK_LIVE_SMOKE.md](docs/TWO_TASK_LIVE_SMOKE.md). Treat that smoke as runner/scorer validation, not as a headline benchmark claim.
+
+The next useful benchmark is the full planned two-task matrix:
 
 ```text
 5 trials * 2 task families * 2 model tiers * 2 conditions = 40 agent runs
 ```
 
-That would test whether the verification-first loop holds beyond one task family.
+That would test whether the verification-first loop holds beyond one task family with enough trials to compare task-family and model-tier behavior.
 
 Other high-value next steps:
 

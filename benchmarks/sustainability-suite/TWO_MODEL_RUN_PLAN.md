@@ -18,13 +18,21 @@ economical / baseline
 economical / with-skill
 ```
 
-For the initial single-task prototype:
+Completed single-task prototype:
 
 ```text
 5 trials * 1 task family * 2 model tiers * 2 conditions = 20 runs
 ```
 
-For the minimum credible sustainability benchmark:
+Completed two-task live smoke:
+
+```text
+1 trial * 2 task families * 2 model tiers * 2 conditions = 8 runs
+```
+
+See [`docs/TWO_TASK_LIVE_SMOKE.md`](../../docs/TWO_TASK_LIVE_SMOKE.md). Use it as runner/scorer validation only; it is not enough for headline claims.
+
+Next minimum credible sustainability benchmark:
 
 ```text
 5 trials * 2 task families * 2 model tiers * 2 conditions = 40 runs
@@ -75,7 +83,12 @@ python3 benchmarks/sustainability-suite/score_model_matrix.py \
   --json-output runs/sustainability-suite-model-matrix/matrix-score.json
 ```
 
-The current scorer aggregates the `Verification kills seeded bugs` dimension for `agent-policy-evolution`. It reports mean seeded-bug score and mean killed seed count for each model tier and condition.
+The current scorer aggregates functional score, seeded-bug score, and process score for both default task families:
+
+- `agent-policy-evolution`
+- `subscription-billing-evolution`
+
+Report task-family rows as well as model-tier aggregates before drawing cross-task conclusions.
 
 ## Reporting
 
