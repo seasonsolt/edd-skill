@@ -183,7 +183,7 @@ def apply_files(run_dir: Path, response: dict[str, Any], task: str) -> list[str]
     if not isinstance(files, list):
         raise ValueError("model response must contain a files list")
 
-    written = []
+    validated: list[tuple[str, str]] = []
     for item in files:
         if not isinstance(item, dict):
             raise ValueError("each file item must be an object")
@@ -198,7 +198,10 @@ def apply_files(run_dir: Path, response: dict[str, Any], task: str) -> list[str]
             )
         if not is_allowed_path(path, task):
             raise ValueError(f"model tried to write disallowed path: {path}")
-        normalized = normalize_relative_path(path)
+        validated.append((normalize_relative_path(path), content))
+
+    written = []
+    for normalized, content in validated:
         destination = run_dir / normalized
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_text(content, encoding="utf-8")

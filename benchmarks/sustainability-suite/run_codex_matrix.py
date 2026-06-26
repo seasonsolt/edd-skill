@@ -142,9 +142,20 @@ def main() -> int:
     parser.add_argument("--runs-root", required=True)
     parser.add_argument("--limit", type=int, help="Run only the first N discovered runs")
     parser.add_argument("--timeout", type=int, default=600)
+    parser.add_argument(
+        "--skip-completed",
+        action="store_true",
+        help="Skip runs whose RUN_METADATA.json status is completed",
+    )
     args = parser.parse_args()
 
     run_dirs = run_model_matrix.discover_runs(Path(args.runs_root).resolve())
+    if args.skip_completed:
+        run_dirs = [
+            run_dir
+            for run_dir in run_dirs
+            if run_model_matrix.load_json(run_dir / "RUN_METADATA.json").get("status") != "completed"
+        ]
     if args.limit is not None:
         run_dirs = run_dirs[: args.limit]
     if not run_dirs:

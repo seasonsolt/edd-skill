@@ -118,6 +118,7 @@ The useful habit is simple: make the agent prove what done means before it claim
 - Benchmark case review: [docs/EDD_BENCHMARK_CASE_REVIEW.md](docs/EDD_BENCHMARK_CASE_REVIEW.md)
 - Benchmark threat model: [docs/BENCHMARK_THREATS.md](docs/BENCHMARK_THREATS.md)
 - Sustainability pilot: [benchmarks/sustainability-suite/](benchmarks/sustainability-suite/)
+- Two-task live smoke: [docs/TWO_TASK_LIVE_SMOKE.md](docs/TWO_TASK_LIVE_SMOKE.md)
 
 ## Next
 

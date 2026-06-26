@@ -117,6 +117,16 @@ The completed single-task pilot used 20 provider-backed runs:
 
 This supports a narrow result: EDD improved verification quality for the SOTA tier on this task. It did not improve hidden functional correctness, and it did not help the economical tier in this setup.
 
+## Current Two-Task Smoke
+
+A one-trial provider-backed smoke has now run the default two-task matrix end-to-end:
+
+```text
+1 trial * 2 task families * 2 model tiers * 2 conditions = 8 runs
+```
+
+All 8 runs scored. See [`docs/TWO_TASK_LIVE_SMOKE.md`](../../docs/TWO_TASK_LIVE_SMOKE.md) for the table and interpretation. Treat this as a runner/scorer smoke, not as a headline benchmark claim.
+
 ## Runnable Prototype
 
 Prepare agent-ready run directories. By default this creates the two-task minimum matrix:
