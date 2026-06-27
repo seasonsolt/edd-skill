@@ -14,6 +14,20 @@ expected behavior -> tests/evals -> implementation -> evidence -> regressions
 
 The evidence so far supports a practical claim: EDD makes agents leave better verification evidence. It has not yet proven broad hidden functional improvement.
 
+## Current Understanding
+
+Modern SOTA coding models already handle some context drift better than earlier agents. They also tend to internalize parts of the eval-first loop: read the task, add tests, run checks, and fix regressions.
+
+That changes where EDD Skill helps. For strong models, it may not create a large jump in short hidden-test benchmarks because the model already has some of this loop engineering built in. The skill is more useful when you want the loop to be explicit: visible eval contracts, red/green logs, regression files, and reviewable evidence.
+
+So the current claim is narrow:
+
+```text
+EDD Skill turns implicit agent discipline into explicit, auditable engineering practice.
+```
+
+The current evidence fits that claim better than a broad claim that EDD improves SOTA coding correctness.
+
 ### Five-task benchmark
 
 This run compared baseline agents with agents using EDD Skill:
